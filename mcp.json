@@ -1,0 +1,14 @@
+{
+"servers": {
+    "wdk": {
+        "type": "stdio",
+        "command": "node",
+        "args": [
+            "/Users/alialkh/Documents/GitHub/wdk-mcp/examples/basic/index.js"
+        ],
+        "env": {
+            "WDK_SEED": "assist put dwarf deliver rigid valid gap decorate express copper track hurry"
+        }
+    }
+    }
+}
