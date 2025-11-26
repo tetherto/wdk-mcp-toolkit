@@ -67,8 +67,6 @@ Send 0.01 ETH to 0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb
 | `{chain}_sendTransaction` | Send native currency | Yes |
 | `{chain}_quoteTransfer` | Estimate transfer fee | No |
 
-Replace `{chain}` with: `ethereum`, `polygon`, `arbitrum`, or `bitcoin`
-
 ## Security
 - All write operations require explicit user confirmation via MCP elicitation
 - Private keys never leave the MCP server process
