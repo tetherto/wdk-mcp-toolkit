@@ -2,6 +2,7 @@
 
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import WDK from '@tetherto/wdk'
+import { SwapProtocol, BridgeProtocol, LendingProtocol, FiatProtocol } from '@tetherto/wdk-wallet/protocols'
 import { BitfinexPricingClient } from '@tetherto/wdk-pricing-bitfinex-http'
 
 /** @typedef {import('@tetherto/wdk').default} WDK */
@@ -22,6 +23,14 @@ import { BitfinexPricingClient } from '@tetherto/wdk-pricing-bitfinex-http'
 /**
  * @typedef {Object} WdkConfig
  * @property {string} [seed] - BIP-39 seed phrase. Falls back to WDK_SEED env variable.
+ */
+
+/**
+ * @typedef {Object} ProtocolRegistry
+ * @property {Map<string, Set<string>>} swap - Chain to labels mapping for swap protocols.
+ * @property {Map<string, Set<string>>} bridge - Chain to labels mapping for bridge protocols.
+ * @property {Map<string, Set<string>>} lending - Chain to labels mapping for lending protocols.
+ * @property {Map<string, Set<string>>} fiat - Chain to labels mapping for fiat protocols.
  */
 
 /** @typedef {Map<string, TokenInfo>} TokenMap */
@@ -48,7 +57,8 @@ export const CHAINS = {
 
 export const DEFAULT_TOKENS = {
   [CHAINS.ETHEREUM]: {
-    USDT: { address: '0xdAC17F958D2ee523a2206206994597C13D831ec7', decimals: 6 }
+    USDT: { address: '0xdAC17F958D2ee523a2206206994597C13D831ec7', decimals: 6 },
+    XAUT: { address: '0x68749665FF8D2d112Fa859AA293F07A622782F38', decimals: 6 }
   },
   [CHAINS.POLYGON]: {
     USDT: { address: '0xc2132D05D31c914a87C6611C10748AEb04B58e8F', decimals: 6 }
@@ -106,6 +116,14 @@ export class WdkMcpServer extends McpServer {
 
     /** @type {TokenRegistry} */
     this.tokenRegistry = new Map()
+
+    /** @type {ProtocolRegistry} */
+    this._protocols = {
+      swap: new Map(),
+      bridge: new Map(),
+      lending: new Map(),
+      fiat: new Map()
+    }
   }
 
   /**
@@ -240,6 +258,126 @@ export class WdkMcpServer extends McpServer {
     }
 
     return this
+  }
+
+  /**
+   * Registers a protocol for a blockchain.
+   *
+   * @template {typeof SwapProtocol | typeof BridgeProtocol | typeof LendingProtocol | typeof FiatProtocol} P
+   * @param {string} chain - The blockchain name (e.g., "ethereum").
+   * @param {string} label - The protocol label (e.g., "velora").
+   * @param {P} Protocol - The protocol class.
+   * @param {ConstructorParameters<P>[1]} [config] - The protocol configuration.
+   * @returns {WdkMcpServer} The server instance.
+   * @throws {Error} If useWdk() has not been called.
+   * @throws {Error} If unknown protocol type.
+   */
+  registerProtocol (chain, label, Protocol, config) {
+    if (!this.wdk) {
+      throw new Error('Call useWdk({ seed }) before registerProtocol().')
+    }
+
+    let registry
+    if (Protocol.prototype instanceof SwapProtocol) {
+      registry = this._protocols.swap
+    } else if (Protocol.prototype instanceof BridgeProtocol) {
+      registry = this._protocols.bridge
+    } else if (Protocol.prototype instanceof LendingProtocol) {
+      registry = this._protocols.lending
+    } else if (Protocol.prototype instanceof FiatProtocol) {
+      registry = this._protocols.fiat
+    } else {
+      throw new Error('Unknown protocol type. Must extend SwapProtocol, BridgeProtocol, LendingProtocol, or FiatProtocol.')
+    }
+
+    if (!registry.has(chain)) {
+      registry.set(chain, new Set())
+    }
+    registry.get(chain).add(label)
+
+    this.wdk.registerProtocol(chain, label, Protocol, config)
+
+    return this
+  }
+
+  /**
+   * Returns chains that have swap protocols registered.
+   *
+   * @returns {string[]} The chain names.
+   */
+  getSwapChains () {
+    return [...this._protocols.swap.keys()]
+  }
+
+  /**
+   * Returns swap protocol labels for a chain.
+   *
+   * @param {string} chain - The blockchain name.
+   * @returns {string[]} The protocol labels.
+   */
+  getSwapProtocols (chain) {
+    const labels = this._protocols.swap.get(chain)
+    return labels ? [...labels] : []
+  }
+
+  /**
+   * Returns chains that have bridge protocols registered.
+   *
+   * @returns {string[]} The chain names.
+   */
+  getBridgeChains () {
+    return [...this._protocols.bridge.keys()]
+  }
+
+  /**
+   * Returns bridge protocol labels for a chain.
+   *
+   * @param {string} chain - The blockchain name.
+   * @returns {string[]} The protocol labels.
+   */
+  getBridgeProtocols (chain) {
+    const labels = this._protocols.bridge.get(chain)
+    return labels ? [...labels] : []
+  }
+
+  /**
+   * Returns chains that have lending protocols registered.
+   *
+   * @returns {string[]} The chain names.
+   */
+  getLendingChains () {
+    return [...this._protocols.lending.keys()]
+  }
+
+  /**
+   * Returns lending protocol labels for a chain.
+   *
+   * @param {string} chain - The blockchain name.
+   * @returns {string[]} The protocol labels.
+   */
+  getLendingProtocols (chain) {
+    const labels = this._protocols.lending.get(chain)
+    return labels ? [...labels] : []
+  }
+
+  /**
+   * Returns chains that have fiat protocols registered.
+   *
+   * @returns {string[]} The chain names.
+   */
+  getFiatChains () {
+    return [...this._protocols.fiat.keys()]
+  }
+
+  /**
+   * Returns fiat protocol labels for a chain.
+   *
+   * @param {string} chain - The blockchain name.
+   * @returns {string[]} The protocol labels.
+   */
+  getFiatProtocols (chain) {
+    const labels = this._protocols.fiat.get(chain)
+    return labels ? [...labels] : []
   }
 
   /**
