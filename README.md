@@ -581,73 +581,39 @@ Pre-configured USDT token addresses for common chains. These are automatically r
 
 ## 🖥️ Using with VS Code GitHub Copilot Chat
 
-You can use this MCP server with [VS Code GitHub Copilot Chat](https://code.visualstudio.com/docs/copilot/chat/mcp-servers) to interact with your wallets through natural language.
+You can use this MCP server with [VS Code GitHub Copilot Chat](https://code.visualstudio.com/docs/copilot/chat/mcp-servers).
 
-### Step 1: Create your MCP server
-
-Create a new project and install dependencies:
+### Step 1: Clone the repository
 
 ```bash
-mkdir my-wallet-mcp
-cd my-wallet-mcp
-npm init -y
-npm install @tetherto/wdk-mcp-toolkit @tetherto/wdk-wallet-evm @tetherto/wdk-wallet-btc @modelcontextprotocol/sdk
+git clone https://github.com/AlibudaLab/wdk-mcp-toolkit.git
+cd wdk-mcp-toolkit
+npm install
 ```
 
-Add `"type": "module"` to your `package.json`.
+### Step 2: Configure VS Code
 
-### Step 2: Create the server entry point
-
-Create `index.js`:
-
-```javascript
-import { WdkMcpServer } from '@tetherto/wdk-mcp-toolkit'
-import { walletTools } from '@tetherto/wdk-mcp-toolkit/tools/wallet'
-import { pricingTools } from '@tetherto/wdk-mcp-toolkit/tools/pricing'
-import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
-import WalletManagerEvm from '@tetherto/wdk-wallet-evm'
-import WalletManagerBtc from '@tetherto/wdk-wallet-btc'
-
-const server = new WdkMcpServer('my-wallet-server', '1.0.0')
-  .useWdk({ seed: process.env.WDK_SEED })
-  .registerWallet('ethereum', WalletManagerEvm, {
-    provider: process.env.ETH_RPC_URL
-  })
-  .registerWallet('bitcoin', WalletManagerBtc, {
-    network: 'bitcoin'
-  })
-  .usePricing()
-  .registerTools([...walletTools, ...pricingTools])
-
-const transport = new StdioServerTransport()
-await server.connect(transport)
-```
-
-### Step 3: Configure VS Code
-
-1. Open VS Code Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`)
-2. Run `MCP: Open User Configuration` (global) or `MCP: Open Workspace Folder Configuration` (workspace)
-3. Add your server to the `mcp.json` file:
+Create `.vscode/mcp.json` in the project root:
 
 ```json
 {
   "servers": {
-    "my-wallet": {
+    "wdk": {
+      "type": "stdio",
       "command": "node",
       "args": ["examples/basic/index.js"],
-      "cwd": "/path/to/my-wallet-mcp",
       "env": {
-        "WDK_SEED": "your twelve word seed phrase here",
-        "WDK_INDEXER_API_KEY": "your api key"
+        "WDK_SEED": "your wallet's seed phrase",
+        "WDK_INDEXER_API_KEY": "your indexer api key, you can obtain one here: https://docs.wallet.tether.io/tools/indexer-api/get-started"
       }
     }
   }
 }
 ```
 
-4. Click the **Start** button that appears in the `mcp.json` file to start the server
+Open the file in VS Code and click the **Start** button that appears above the server configuration.
 
-### Step 4: Use in Copilot Chat
+### Step 3: Use in Copilot Chat
 
 1. Open GitHub Copilot Chat in VS Code
 2. Select **Agent** mode from the dropdown
