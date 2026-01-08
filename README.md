@@ -88,6 +88,23 @@ console.error('WDK MCP Server running on stdio')
 
 > **📁 Example:** See [`examples/basic/index.js`](examples/basic/index.js) for a complete working example.
 
+### Example Prompts
+
+Here are example prompts you can use with your AI agent connected to WDK MCP Toolkit:
+
+| Category | Prompt |
+|----------|--------|
+| **Wallet** | "What's my Ethereum address?" |
+| **Wallet** | "Send 0.01 ETH to Vitalik" |
+| **Wallet** | "How much USDT do I have on Arbitrum?" |
+| **Pricing** | "What's the current price of ETH in USD?" |
+| **Indexer** | "Show my recent XAUT transfers on Ethereum" |
+| **Swap** | "Swap 100 USDT for XAUT on Ethereum" |
+| **Bridge** | "Bridge 50 USDT from Ethereum to Arbitrum" |
+| **Lending** | "Supply 100 USDT to Aave on Ethereum" |
+| **Fiat On-Ramp** | "Buy $100 worth of ETH with USD" |
+
+
 ### Custom Token Registration
 
 Token registration maps human-readable symbols (like "USDT") to contract addresses. This is necessary because:
