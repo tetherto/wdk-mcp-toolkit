@@ -6,6 +6,7 @@ import WalletManagerEvm from '@tetherto/wdk-wallet-evm'
 import VeloraProtocolEvm from '@tetherto/wdk-protocol-swap-velora-evm'
 import Usdt0ProtocolEvm from '@tetherto/wdk-protocol-bridge-usdt0-evm'
 import AaveProtocolEvm from '@tetherto/wdk-protocol-lending-aave-evm'
+import MoonPayProtocol from '@tetherto/wdk-protocol-fiat-moonpay'
 import { WdkMcpServer } from '../../src/server.js'
 import { walletTools } from '../../src/tools/wallet/index.js'
 import { pricingTools } from '../../src/tools/pricing/index.js'
@@ -13,6 +14,7 @@ import { indexerTools } from '../../src/tools/indexer/index.js'
 import { swapTools } from '../../src/tools/swap/index.js'
 import { bridgeTools } from '../../src/tools/bridge/index.js'
 import { lendingTools } from '../../src/tools/lending/index.js'
+import { fiatTools } from '../../src/tools/fiat/index.js'
 
 async function main () {
   const server = new WdkMcpServer('wdk-mcp-server', '1.0.0')
@@ -31,6 +33,10 @@ async function main () {
     .registerProtocol('ethereum', 'usdt0', Usdt0ProtocolEvm)
     .registerProtocol('arbitrum', 'usdt0', Usdt0ProtocolEvm)
     .registerProtocol('ethereum', 'aave', AaveProtocolEvm)
+    .registerProtocol('ethereum', 'moonpay', MoonPayProtocol, {
+      secretKey: process.env.MOONPAY_SECRET_KEY,
+      apiKey: process.env.MOONPAY_API_KEY
+    })
     .usePricing()
     .useIndexer({ apiKey: process.env.WDK_INDEXER_API_KEY })
     .registerTools([
@@ -39,7 +45,8 @@ async function main () {
       ...indexerTools,
       ...swapTools,
       ...bridgeTools,
-      ...lendingTools
+      ...lendingTools,
+      ...fiatTools
     ])
 
   const transport = new StdioServerTransport()
@@ -50,8 +57,7 @@ async function main () {
   console.error('Registered swap protocols:', server.getSwapChains())
   console.error('Registered bridge protocols:', server.getBridgeChains())
   console.error('Registered lending protocols:', server.getLendingChains())
-  console.error('Registered Ethereum tokens:', server.getRegisteredTokens('ethereum'))
-  console.error('Registered Arbitrum tokens:', server.getRegisteredTokens('arbitrum'))
+  console.error('Registered fiat protocols:', server.getFiatChains())
 }
 
 main().catch((error) => {
