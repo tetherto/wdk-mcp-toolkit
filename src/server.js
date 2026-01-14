@@ -206,7 +206,7 @@ export class WdkMcpServer extends McpServer {
    */
   getTokenInfo (chain, symbol) {
     const tokens = this.tokenRegistry.get(chain)
-    return tokens ? tokens.get(symbol.toUpperCase()) : undefined
+    return tokens?.get(symbol.toUpperCase())
   }
 
   /**
