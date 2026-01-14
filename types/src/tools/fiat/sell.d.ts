@@ -1,7 +1,9 @@
+/** @typedef {import('../../server.js').WdkMcpServer} WdkMcpServer */
 /**
  * Registers the 'sell' tool for selling crypto for fiat currency.
  *
- * @param {import('../../server.js').WdkMcpServer} server - The MCP server instance.
+ * @param {WdkMcpServer} server - The MCP server instance.
  * @returns {void}
  */
-export function sell(server: import("../../server.js").WdkMcpServer): void;
+export function sell(server: WdkMcpServer): void;
+export type WdkMcpServer = import("../../server.js").WdkMcpServer;

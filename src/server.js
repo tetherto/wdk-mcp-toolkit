@@ -125,36 +125,48 @@ export class WdkMcpServer extends McpServer {
     super({ name, version })
 
     /**
+     * The Wallet Development Kit instance for blockchain operations.
+     *
      * @private
      * @type {WDK | null}
      */
     this._wdk = null
 
     /**
+     * HTTP client for querying blockchain indexer data (balances, transfers).
+     *
      * @private
      * @type {WdkIndexerClient | null}
      */
     this._indexerClient = null
 
     /**
+     * HTTP client for fetching cryptocurrency pricing data from Bitfinex.
+     *
      * @private
      * @type {BitfinexPricingClient | null}
      */
     this._pricingClient = null
 
     /**
+     * Set of blockchain identifiers that have been configured.
+     *
      * @private
      * @type {Set<string>}
      */
     this._chains = new Set()
 
     /**
+     * Registry mapping chains to their token configurations (address, decimals).
+     *
      * @private
      * @type {TokenRegistry}
      */
     this._tokenRegistry = new Map()
 
     /**
+     * Registry of DeFi protocols (swap, bridge, lending, fiat) by chain.
+     *
      * @private
      * @type {ProtocolRegistry}
      */

@@ -15,10 +15,12 @@
 
 import { z } from 'zod'
 
+/** @typedef {import('../../server.js').WdkMcpServer} WdkMcpServer */
+
 /**
  * Registers the 'sign' tool for signing messages.
  *
- * @param {import('../../server.js').WdkMcpServer} server - The MCP server instance.
+ * @param {WdkMcpServer} server - The MCP server instance.
  * @returns {void}
  */
 export function sign (server) {

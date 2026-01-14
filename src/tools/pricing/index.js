@@ -16,11 +16,13 @@
 import { getCurrentPrice } from './getCurrentPrice.js'
 import { getHistoricalPrice } from './getHistoricalPrice.js'
 
+/** @typedef {import('../../server.js').ToolFunction} ToolFunction */
+
 /**
  * All pricing tools.
  *
  * @readonly
- * @type {import('../../server.js').ToolFunction[]}
+ * @type {ToolFunction[]}
  */
 export const PRICING_TOOLS = [
   getCurrentPrice,

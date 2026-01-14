@@ -1,24 +1,26 @@
+/** @typedef {import('../../server.js').ToolFunction} ToolFunction */
 /**
  * Read-only fiat tools.
  *
  * @readonly
- * @type {import('../../server.js').ToolFunction[]}
+ * @type {ToolFunction[]}
  */
-export const FIAT_READ_TOOLS: import("../../server.js").ToolFunction[];
+export const FIAT_READ_TOOLS: ToolFunction[];
 /**
  * Write fiat tools (require confirmation).
  *
  * @readonly
- * @type {import('../../server.js').ToolFunction[]}
+ * @type {ToolFunction[]}
  */
-export const FIAT_WRITE_TOOLS: import("../../server.js").ToolFunction[];
+export const FIAT_WRITE_TOOLS: ToolFunction[];
 /**
  * All fiat tools.
  *
  * @readonly
- * @type {import('../../server.js').ToolFunction[]}
+ * @type {ToolFunction[]}
  */
-export const FIAT_TOOLS: import("../../server.js").ToolFunction[];
+export const FIAT_TOOLS: ToolFunction[];
+export type ToolFunction = import("../../server.js").ToolFunction;
 import { quoteBuy } from './quoteBuy.js';
 import { buy } from './buy.js';
 import { quoteSell } from './quoteSell.js';

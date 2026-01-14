@@ -1,24 +1,26 @@
+/** @typedef {import('../../server.js').ToolFunction} ToolFunction */
 /**
  * Read-only lending tools.
  *
  * @readonly
- * @type {import('../../server.js').ToolFunction[]}
+ * @type {ToolFunction[]}
  */
-export const LENDING_READ_TOOLS: import("../../server.js").ToolFunction[];
+export const LENDING_READ_TOOLS: ToolFunction[];
 /**
  * Write lending tools (require confirmation).
  *
  * @readonly
- * @type {import('../../server.js').ToolFunction[]}
+ * @type {ToolFunction[]}
  */
-export const LENDING_WRITE_TOOLS: import("../../server.js").ToolFunction[];
+export const LENDING_WRITE_TOOLS: ToolFunction[];
 /**
  * All lending tools.
  *
  * @readonly
- * @type {import('../../server.js').ToolFunction[]}
+ * @type {ToolFunction[]}
  */
-export const LENDING_TOOLS: import("../../server.js").ToolFunction[];
+export const LENDING_TOOLS: ToolFunction[];
+export type ToolFunction = import("../../server.js").ToolFunction;
 import { quoteSupply } from './quoteSupply.js';
 import { supply } from './supply.js';
 import { quoteWithdraw } from './quoteWithdraw.js';

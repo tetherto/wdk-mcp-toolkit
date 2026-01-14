@@ -15,10 +15,12 @@
 
 import { z } from 'zod'
 
+/** @typedef {import('../../server.js').WdkMcpServer} WdkMcpServer */
+
 /**
  * Registers the 'quoteBuy' tool for quoting fiat-to-crypto purchases.
  *
- * @param {import('../../server.js').WdkMcpServer} server - The MCP server instance.
+ * @param {WdkMcpServer} server - The MCP server instance.
  * @returns {void}
  */
 export function quoteBuy (server) {

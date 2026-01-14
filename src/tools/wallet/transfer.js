@@ -15,10 +15,12 @@
 
 import { z } from 'zod'
 
+/** @typedef {import('../../server.js').WdkMcpServer} WdkMcpServer */
+
 /**
  * Registers the 'transfer' tool for transferring tokens.
  *
- * @param {import('../../server.js').WdkMcpServer} server - The MCP server instance.
+ * @param {WdkMcpServer} server - The MCP server instance.
  * @returns {void}
  */
 export function transfer (server) {

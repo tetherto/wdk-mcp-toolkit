@@ -15,10 +15,12 @@
 
 import { z } from 'zod'
 
+/** @typedef {import('../../server.js').WdkMcpServer} WdkMcpServer */
+
 /**
  * Registers the 'borrow' tool for borrowing from lending pools.
  *
- * @param {import('../../server.js').WdkMcpServer} server - The MCP server instance.
+ * @param {WdkMcpServer} server - The MCP server instance.
  * @returns {void}
  */
 export function borrow (server) {

@@ -37,31 +37,43 @@ export class WdkMcpServer {
      */
     constructor(name: string, version: string);
     /**
+     * The Wallet Development Kit instance for blockchain operations.
+     *
      * @private
      * @type {WDK | null}
      */
     private _wdk;
     /**
+     * HTTP client for querying blockchain indexer data (balances, transfers).
+     *
      * @private
      * @type {WdkIndexerClient | null}
      */
     private _indexerClient;
     /**
+     * HTTP client for fetching cryptocurrency pricing data from Bitfinex.
+     *
      * @private
      * @type {BitfinexPricingClient | null}
      */
     private _pricingClient;
     /**
+     * Set of blockchain identifiers that have been configured.
+     *
      * @private
      * @type {Set<string>}
      */
     private _chains;
     /**
+     * Registry mapping chains to their token configurations (address, decimals).
+     *
      * @private
      * @type {TokenRegistry}
      */
     private _tokenRegistry;
     /**
+     * Registry of DeFi protocols (swap, bridge, lending, fiat) by chain.
+     *
      * @private
      * @type {ProtocolRegistry}
      */

@@ -1,24 +1,26 @@
+/** @typedef {import('../../server.js').ToolFunction} ToolFunction */
 /**
  * Read-only wallet tools.
  *
  * @readonly
- * @type {import('../../server.js').ToolFunction[]}
+ * @type {ToolFunction[]}
  */
-export const WALLET_READ_TOOLS: import("../../server.js").ToolFunction[];
+export const WALLET_READ_TOOLS: ToolFunction[];
 /**
  * Write wallet tools (require confirmation).
  *
  * @readonly
- * @type {import('../../server.js').ToolFunction[]}
+ * @type {ToolFunction[]}
  */
-export const WALLET_WRITE_TOOLS: import("../../server.js").ToolFunction[];
+export const WALLET_WRITE_TOOLS: ToolFunction[];
 /**
  * All wallet tools.
  *
  * @readonly
- * @type {import('../../server.js').ToolFunction[]}
+ * @type {ToolFunction[]}
  */
-export const WALLET_TOOLS: import("../../server.js").ToolFunction[];
+export const WALLET_TOOLS: ToolFunction[];
+export type ToolFunction = import("../../server.js").ToolFunction;
 import { getAddress } from './getAddress.js';
 import { getBalance } from './getBalance.js';
 import { getFeeRates } from './getFeeRates.js';

@@ -16,11 +16,13 @@
 import { quoteSwap } from './quoteSwap.js'
 import { swap } from './swap.js'
 
+/** @typedef {import('../../server.js').ToolFunction} ToolFunction */
+
 /**
  * Read-only swap tools.
  *
  * @readonly
- * @type {import('../../server.js').ToolFunction[]}
+ * @type {ToolFunction[]}
  */
 export const SWAP_READ_TOOLS = [quoteSwap]
 
@@ -28,7 +30,7 @@ export const SWAP_READ_TOOLS = [quoteSwap]
  * Write swap tools (require confirmation).
  *
  * @readonly
- * @type {import('../../server.js').ToolFunction[]}
+ * @type {ToolFunction[]}
  */
 export const SWAP_WRITE_TOOLS = [swap]
 
@@ -36,7 +38,7 @@ export const SWAP_WRITE_TOOLS = [swap]
  * All swap tools.
  *
  * @readonly
- * @type {import('../../server.js').ToolFunction[]}
+ * @type {ToolFunction[]}
  */
 export const SWAP_TOOLS = [...SWAP_READ_TOOLS, ...SWAP_WRITE_TOOLS]
 

@@ -15,10 +15,12 @@
 
 import { z } from 'zod'
 
+/** @typedef {import('../../server.js').WdkMcpServer} WdkMcpServer */
+
 /**
  * Registers the 'swap' tool for executing token swaps.
  *
- * @param {import('../../server.js').WdkMcpServer} server - The MCP server instance.
+ * @param {WdkMcpServer} server - The MCP server instance.
  * @returns {void}
  */
 export function swap (server) {

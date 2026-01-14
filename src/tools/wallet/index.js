@@ -25,11 +25,13 @@ import { transfer } from './transfer.js'
 import { sign } from './sign.js'
 import { verify } from './verify.js'
 
+/** @typedef {import('../../server.js').ToolFunction} ToolFunction */
+
 /**
  * Read-only wallet tools.
  *
  * @readonly
- * @type {import('../../server.js').ToolFunction[]}
+ * @type {ToolFunction[]}
  */
 export const WALLET_READ_TOOLS = [
   getAddress,
@@ -45,7 +47,7 @@ export const WALLET_READ_TOOLS = [
  * Write wallet tools (require confirmation).
  *
  * @readonly
- * @type {import('../../server.js').ToolFunction[]}
+ * @type {ToolFunction[]}
  */
 export const WALLET_WRITE_TOOLS = [
   sendTransaction,
@@ -58,7 +60,7 @@ export const WALLET_WRITE_TOOLS = [
  * All wallet tools.
  *
  * @readonly
- * @type {import('../../server.js').ToolFunction[]}
+ * @type {ToolFunction[]}
  */
 export const WALLET_TOOLS = [
   ...WALLET_READ_TOOLS,

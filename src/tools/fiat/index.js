@@ -22,11 +22,13 @@ import { getSupportedCryptoAssets } from './getSupportedCryptoAssets.js'
 import { getSupportedFiatCurrencies } from './getSupportedFiatCurrencies.js'
 import { getSupportedCountries } from './getSupportedCountries.js'
 
+/** @typedef {import('../../server.js').ToolFunction} ToolFunction */
+
 /**
  * Read-only fiat tools.
  *
  * @readonly
- * @type {import('../../server.js').ToolFunction[]}
+ * @type {ToolFunction[]}
  */
 export const FIAT_READ_TOOLS = [
   quoteBuy,
@@ -41,7 +43,7 @@ export const FIAT_READ_TOOLS = [
  * Write fiat tools (require confirmation).
  *
  * @readonly
- * @type {import('../../server.js').ToolFunction[]}
+ * @type {ToolFunction[]}
  */
 export const FIAT_WRITE_TOOLS = [
   buy,
@@ -52,7 +54,7 @@ export const FIAT_WRITE_TOOLS = [
  * All fiat tools.
  *
  * @readonly
- * @type {import('../../server.js').ToolFunction[]}
+ * @type {ToolFunction[]}
  */
 export const FIAT_TOOLS = [
   ...FIAT_READ_TOOLS,

@@ -1,7 +1,9 @@
+/** @typedef {import('../../server.js').WdkMcpServer} WdkMcpServer */
 /**
  * Registers the 'getSupportedFiatCurrencies' tool for listing supported fiat currencies.
  *
- * @param {import('../../server.js').WdkMcpServer} server - The MCP server instance.
+ * @param {WdkMcpServer} server - The MCP server instance.
  * @returns {void}
  */
-export function getSupportedFiatCurrencies(server: import("../../server.js").WdkMcpServer): void;
+export function getSupportedFiatCurrencies(server: WdkMcpServer): void;
+export type WdkMcpServer = import("../../server.js").WdkMcpServer;

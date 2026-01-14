@@ -22,11 +22,13 @@ import { borrow } from './borrow.js'
 import { quoteRepay } from './quoteRepay.js'
 import { repay } from './repay.js'
 
+/** @typedef {import('../../server.js').ToolFunction} ToolFunction */
+
 /**
  * Read-only lending tools.
  *
  * @readonly
- * @type {import('../../server.js').ToolFunction[]}
+ * @type {ToolFunction[]}
  */
 export const LENDING_READ_TOOLS = [
   quoteSupply,
@@ -39,7 +41,7 @@ export const LENDING_READ_TOOLS = [
  * Write lending tools (require confirmation).
  *
  * @readonly
- * @type {import('../../server.js').ToolFunction[]}
+ * @type {ToolFunction[]}
  */
 export const LENDING_WRITE_TOOLS = [
   supply,
@@ -52,7 +54,7 @@ export const LENDING_WRITE_TOOLS = [
  * All lending tools.
  *
  * @readonly
- * @type {import('../../server.js').ToolFunction[]}
+ * @type {ToolFunction[]}
  */
 export const LENDING_TOOLS = [
   ...LENDING_READ_TOOLS,
