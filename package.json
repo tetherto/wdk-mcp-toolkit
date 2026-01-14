@@ -32,6 +32,7 @@
       "default": "./src/index.js"
     },
     "./tools/*": {
+      "types": "./types/tools/*.d.ts",
       "default": "./src/tools/*.js"
     },
     "./package": {
