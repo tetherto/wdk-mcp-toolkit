@@ -13,7 +13,7 @@
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "git://github.com/tetherto/wdk-mcp.git"
+    "url": "git://github.com/tetherto/wdk-mcp-toolkit.git"
   },
   "main": "index.js",
   "type": "module",
