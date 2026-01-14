@@ -1,3 +1,7 @@
+/**
+ * Supported blockchain identifiers.
+ */
+export type CHAINS = string;
 export namespace CHAINS {
     let ETHEREUM: string;
     let POLYGON: string;
@@ -13,75 +17,18 @@ export namespace CHAINS {
     let TON: string;
     let TRON: string;
 }
+/**
+ * Default token configurations per blockchain.
+ *
+ * @readonly
+ * @type {Object<string, Object<string, TokenInfo>>}
+ */
 export const DEFAULT_TOKENS: {
-    [CHAINS.ETHEREUM]: {
-        USDT: {
-            address: string;
-            decimals: number;
-        };
-    };
-    [CHAINS.POLYGON]: {
-        USDT: {
-            address: string;
-            decimals: number;
-        };
-    };
-    [CHAINS.ARBITRUM]: {
-        USDT: {
-            address: string;
-            decimals: number;
-        };
-    };
-    [CHAINS.OPTIMISM]: {
-        USDT: {
-            address: string;
-            decimals: number;
-        };
-    };
-    [CHAINS.BASE]: {
-        USDT: {
-            address: string;
-            decimals: number;
-        };
-    };
-    [CHAINS.AVALANCHE]: {
-        USDT: {
-            address: string;
-            decimals: number;
-        };
-    };
-    [CHAINS.BNB]: {
-        USDT: {
-            address: string;
-            decimals: number;
-        };
-    };
-    [CHAINS.PLASMA]: {
-        USDT: {
-            address: string;
-            decimals: number;
-        };
-    };
-    [CHAINS.TRON]: {
-        USDT: {
-            address: string;
-            decimals: number;
-        };
-    };
-    [CHAINS.TON]: {
-        USDT: {
-            address: string;
-            decimals: number;
-        };
-    };
-    [CHAINS.SOLANA]: {
-        USDT: {
-            address: string;
-            decimals: number;
-        };
+    [x: string]: {
+        [x: string]: TokenInfo;
     };
 };
-export class WdkMcpServer extends McpServer {
+export class WdkMcpServer {
     /**
      * Creates a new MCP server for Tether Wallet Development Kit.
      *
@@ -89,16 +36,54 @@ export class WdkMcpServer extends McpServer {
      * @param {string} version - The server version.
      */
     constructor(name: string, version: string);
-    /** @type {WDK | null} */
-    wdk: WDK | null;
-    /** @type {IndexerConfig | null} */
-    indexer: IndexerConfig | null;
-    /** @type {BitfinexPricingClient | null} */
-    pricingClient: BitfinexPricingClient | null;
-    /** @type {Set<string>} */
-    chains: Set<string>;
-    /** @type {TokenRegistry} */
-    tokenRegistry: TokenRegistry;
+    /**
+     * @private
+     * @type {WDK | null}
+     */
+    private _wdk;
+    /**
+     * @private
+     * @type {WdkIndexerClient | null}
+     */
+    private _indexerClient;
+    /**
+     * @private
+     * @type {BitfinexPricingClient | null}
+     */
+    private _pricingClient;
+    /**
+     * @private
+     * @type {Set<string>}
+     */
+    private _chains;
+    /**
+     * @private
+     * @type {TokenRegistry}
+     */
+    private _tokenRegistry;
+    /**
+     * @private
+     * @type {ProtocolRegistry}
+     */
+    private _protocols;
+    /**
+     * The WDK instance.
+     *
+     * @type {WDK | null}
+     */
+    get wdk(): WDK | null;
+    /**
+     * The indexer client.
+     *
+     * @type {WdkIndexerClient | null}
+     */
+    get indexerClient(): WdkIndexerClient | null;
+    /**
+     * The pricing client.
+     *
+     * @type {BitfinexPricingClient | null}
+     */
+    get pricingClient(): BitfinexPricingClient | null;
     /**
      * Enables WDK and initializes the wallet development kit.
      *
@@ -110,11 +95,11 @@ export class WdkMcpServer extends McpServer {
     /**
      * Enables Indexer for transaction history and UTXO queries.
      *
-     * @param {IndexerConfig} config - The configuration.
+     * @param {Pick<WdkIndexerConfig, 'apiKey'>} config - The configuration.
      * @returns {WdkMcpServer} The server instance.
      * @throws {Error} If no apiKey is provided.
      */
-    useIndexer(config: IndexerConfig): WdkMcpServer;
+    useIndexer(config: Pick<WdkIndexerConfig, "apiKey">): WdkMcpServer;
     /**
      * Enables Pricing for Bitfinex price rates.
      *
@@ -169,9 +154,80 @@ export class WdkMcpServer extends McpServer {
      * @throws {Error} If useWdk() has not been called.
      */
     registerWallet<W extends typeof import("@tetherto/wdk-wallet").default>(blockchain: string, WalletManager: W, config: ConstructorParameters<W>[1]): WdkMcpServer;
+    /**
+     * Registers a protocol for a blockchain.
+     *
+     * @template {typeof SwapProtocol | typeof BridgeProtocol | typeof LendingProtocol | typeof FiatProtocol} P
+     * @param {string} chain - The blockchain name (e.g., "ethereum").
+     * @param {string} label - The protocol label (e.g., "velora").
+     * @param {P} Protocol - The protocol class.
+     * @param {ConstructorParameters<P>[1]} [config] - The protocol configuration.
+     * @returns {WdkMcpServer} The server instance.
+     * @throws {Error} If useWdk() has not been called.
+     * @throws {Error} If unknown protocol type.
+     */
+    registerProtocol<P extends typeof SwapProtocol | typeof BridgeProtocol | typeof LendingProtocol | typeof FiatProtocol>(chain: string, label: string, Protocol: P, config?: ConstructorParameters<P>[1]): WdkMcpServer;
+    /**
+     * Returns chains that have swap protocols registered.
+     *
+     * @returns {string[]} The chain names.
+     */
+    getSwapChains(): string[];
+    /**
+     * Returns swap protocol labels for a chain.
+     *
+     * @param {string} chain - The blockchain name.
+     * @returns {string[]} The protocol labels.
+     */
+    getSwapProtocols(chain: string): string[];
+    /**
+     * Returns chains that have bridge protocols registered.
+     *
+     * @returns {string[]} The chain names.
+     */
+    getBridgeChains(): string[];
+    /**
+     * Returns bridge protocol labels for a chain.
+     *
+     * @param {string} chain - The blockchain name.
+     * @returns {string[]} The protocol labels.
+     */
+    getBridgeProtocols(chain: string): string[];
+    /**
+     * Returns chains that have lending protocols registered.
+     *
+     * @returns {string[]} The chain names.
+     */
+    getLendingChains(): string[];
+    /**
+     * Returns lending protocol labels for a chain.
+     *
+     * @param {string} chain - The blockchain name.
+     * @returns {string[]} The protocol labels.
+     */
+    getLendingProtocols(chain: string): string[];
+    /**
+     * Returns chains that have fiat protocols registered.
+     *
+     * @returns {string[]} The chain names.
+     */
+    getFiatChains(): string[];
+    /**
+     * Returns fiat protocol labels for a chain.
+     *
+     * @param {string} chain - The blockchain name.
+     * @returns {string[]} The protocol labels.
+     */
+    getFiatProtocols(chain: string): string[];
+    /**
+     * Closes the server and securely disposes the WDK instance.
+     *
+     * @returns {Promise<void>}
+     */
+    close(): Promise<void>;
 }
-export type WDK = import("@tetherto/wdk").default;
-export type BitfinexPricingClient = import("@tetherto/wdk-pricing-bitfinex-http").BitfinexPricingClient;
+export type WDK = any;
+export type BitfinexPricingClient = any;
 export type TokenInfo = {
     /**
      * - Token contract address.
@@ -182,21 +238,30 @@ export type TokenInfo = {
      */
     decimals: number;
 };
-export type IndexerConfig = {
-    /**
-     * - WDK Indexer API key.
-     */
-    apiKey: string;
-};
 export type WdkConfig = {
     /**
      * - BIP-39 seed phrase. Falls back to WDK_SEED env variable.
      */
     seed?: string;
 };
+export type ProtocolRegistry = {
+    /**
+     * - Chain to labels mapping for swap protocols.
+     */
+    swap: Map<string, Set<string>>;
+    /**
+     * - Chain to labels mapping for bridge protocols.
+     */
+    bridge: Map<string, Set<string>>;
+    /**
+     * - Chain to labels mapping for lending protocols.
+     */
+    lending: Map<string, Set<string>>;
+    /**
+     * - Chain to labels mapping for fiat protocols.
+     */
+    fiat: Map<string, Set<string>>;
+};
 export type TokenMap = Map<string, TokenInfo>;
 export type TokenRegistry = Map<string, TokenMap>;
 export type ToolFunction = (server: WdkMcpServer) => void;
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import WDK from '@tetherto/wdk';
-import { BitfinexPricingClient } from '@tetherto/wdk-pricing-bitfinex-http';
