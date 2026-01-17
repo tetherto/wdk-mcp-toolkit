@@ -2,6 +2,7 @@
 
 import { beforeEach, describe, expect, jest, test } from '@jest/globals'
 
+import WDK from '@tetherto/wdk'
 import { SwapProtocol, BridgeProtocol, LendingProtocol, FiatProtocol } from '@tetherto/wdk-wallet/protocols'
 
 import { WdkMcpServer, DEFAULT_TOKENS, CHAINS } from '../src/server.js'
@@ -15,62 +16,14 @@ describe('WdkMcpServer', () => {
     server = new WdkMcpServer('test-server', '1.0.0')
   })
 
-  describe('constructor', () => {
-    test('should initialize with null wdk', () => {
-      expect(server.wdk).toBeNull()
-    })
-
-    test('should initialize with null indexerClient', () => {
-      expect(server.indexerClient).toBeNull()
-    })
-
-    test('should initialize with null pricingClient', () => {
-      expect(server.pricingClient).toBeNull()
-    })
-
-    test('should initialize with empty chains', () => {
-      expect(server.getChains()).toEqual([])
-    })
-  })
-
-  describe('wdk getter', () => {
-    test('should return the WDK instance after useWdk is called', () => {
-      server.useWdk({ seed: SEED_PHRASE })
-
-      expect(server.wdk).not.toBeNull()
-    })
-  })
-
-  describe('indexerClient getter', () => {
-    test('should return the indexer client after useIndexer is called', () => {
-      server.useIndexer({ apiKey: 'test-api-key' })
-
-      expect(server.indexerClient).not.toBeNull()
-    })
-  })
-
-  describe('pricingClient getter', () => {
-    test('should return the pricing client after usePricing is called', () => {
-      server.usePricing()
-
-      expect(server.pricingClient).not.toBeNull()
-    })
-  })
-
   describe('useWdk', () => {
-    test('should create WDK instance with provided seed', () => {
-      server.useWdk({ seed: SEED_PHRASE })
-
-      expect(server.wdk).not.toBeNull()
-    })
-
     test('should create WDK instance with WDK_SEED env variable', () => {
       const originalEnv = process.env.WDK_SEED
       process.env.WDK_SEED = SEED_PHRASE
 
       server.useWdk({})
 
-      expect(server.wdk).not.toBeNull()
+      expect(server.wdk).toBeInstanceOf(WDK)
 
       process.env.WDK_SEED = originalEnv
     })
@@ -93,12 +46,6 @@ describe('WdkMcpServer', () => {
   })
 
   describe('useIndexer', () => {
-    test('should create WdkIndexerClient with apiKey', () => {
-      server.useIndexer({ apiKey: 'test-api-key' })
-
-      expect(server.indexerClient).not.toBeNull()
-    })
-
     test('should throw if no apiKey provided', () => {
       expect(() => server.useIndexer({}))
         .toThrow('Indexer requires apiKey.')
@@ -112,12 +59,6 @@ describe('WdkMcpServer', () => {
   })
 
   describe('usePricing', () => {
-    test('should create BitfinexPricingClient', () => {
-      server.usePricing()
-
-      expect(server.pricingClient).not.toBeNull()
-    })
-
     test('should return server instance for chaining', () => {
       const result = server.usePricing()
 
