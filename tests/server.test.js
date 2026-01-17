@@ -72,14 +72,10 @@ describe('WdkMcpServer', () => {
     })
 
     test('should return registered chain names', () => {
-      const WalletManagerMock = jest.fn()
+      server._chains.add('ethereum')
+      server._chains.add('bitcoin')
 
-      server.useWdk({ seed: SEED_PHRASE })
-            .registerWallet('ethereum', WalletManagerMock, {})
-            .registerWallet('bitcoin', WalletManagerMock, {})
-
-      expect(server.getChains()).toContain('ethereum')
-      expect(server.getChains()).toContain('bitcoin')
+      expect(server.getChains()).toEqual(['ethereum', 'bitcoin'])
     })
   })
 
@@ -89,7 +85,7 @@ describe('WdkMcpServer', () => {
 
       server.registerToken('ethereum', 'TEST', tokenInfo)
 
-      expect(server.getTokenInfo('ethereum', 'TEST')).toEqual(tokenInfo)
+      expect(server._tokenRegistry.get('ethereum').get('TEST')).toEqual(tokenInfo)
     })
 
     test('should uppercase symbol', () => {
@@ -97,7 +93,7 @@ describe('WdkMcpServer', () => {
 
       server.registerToken('ethereum', 'test', tokenInfo)
 
-      expect(server.getTokenInfo('ethereum', 'TEST')).toEqual(tokenInfo)
+      expect(server._tokenRegistry.get('ethereum').get('TEST')).toEqual(tokenInfo)
     })
 
     test('should return server instance for chaining', () => {
@@ -110,7 +106,7 @@ describe('WdkMcpServer', () => {
   describe('getTokenInfo', () => {
     test('should return token info for registered token', () => {
       const tokenInfo = { address: '0x123', decimals: 18 }
-      server.registerToken('ethereum', 'TEST', tokenInfo)
+      server._tokenRegistry.set('ethereum', new Map([['TEST', tokenInfo]]))
 
       expect(server.getTokenInfo('ethereum', 'TEST')).toEqual(tokenInfo)
     })
@@ -121,7 +117,7 @@ describe('WdkMcpServer', () => {
 
     test('should be case-insensitive for symbol', () => {
       const tokenInfo = { address: '0x123', decimals: 18 }
-      server.registerToken('ethereum', 'TEST', tokenInfo)
+      server._tokenRegistry.set('ethereum', new Map([['TEST', tokenInfo]]))
 
       expect(server.getTokenInfo('ethereum', 'test')).toEqual(tokenInfo)
     })
@@ -133,13 +129,14 @@ describe('WdkMcpServer', () => {
 
   describe('getRegisteredTokens', () => {
     test('should return token symbols for chain', () => {
-      server.registerToken('ethereum', 'USDT', { address: '0x1', decimals: 6 })
-      server.registerToken('ethereum', 'USDC', { address: '0x2', decimals: 6 })
+      server._tokenRegistry.set('ethereum', new Map([
+        ['USDT', { address: '0x1', decimals: 6 }],
+        ['USDC', { address: '0x2', decimals: 6 }]
+      ]))
 
       const tokens = server.getRegisteredTokens('ethereum')
 
-      expect(tokens).toContain('USDT')
-      expect(tokens).toContain('USDC')
+      expect(tokens).toEqual(['USDT', 'USDC'])
     })
 
     test('should return empty array for unregistered chain', () => {
@@ -170,28 +167,30 @@ describe('WdkMcpServer', () => {
     const CONFIG = { provider: 'https://eth.drpc.org' }
 
     test('should add blockchain to chains registry', () => {
-      server.useWdk({ seed: SEED_PHRASE })
+      server._wdk = { registerWallet: jest.fn() }
 
       server.registerWallet('ethereum', WalletManagerMock, CONFIG)
 
-      expect(server.getChains()).toContain('ethereum')
+      expect(server._chains.has('ethereum')).toBe(true)
     })
 
     test('should register default tokens for known chains', () => {
-      server.useWdk({ seed: SEED_PHRASE })
+      server._wdk = { registerWallet: jest.fn() }
+      const registerTokenSpy = jest.spyOn(server, 'registerToken')
 
       server.registerWallet('ethereum', WalletManagerMock, CONFIG)
 
-      expect(server.getTokenInfo('ethereum', 'USDT')).toEqual(DEFAULT_TOKENS[CHAINS.ETHEREUM].USDT)
-      expect(server.getTokenInfo('ethereum', 'XAUT')).toEqual(DEFAULT_TOKENS[CHAINS.ETHEREUM].XAUT)
+      expect(registerTokenSpy).toHaveBeenCalledWith('ethereum', 'USDT', DEFAULT_TOKENS[CHAINS.ETHEREUM].USDT)
+      expect(registerTokenSpy).toHaveBeenCalledWith('ethereum', 'XAUT', DEFAULT_TOKENS[CHAINS.ETHEREUM].XAUT)
     })
 
     test('should not register tokens for unknown chains', () => {
-      server.useWdk({ seed: SEED_PHRASE })
+      server._wdk = { registerWallet: jest.fn() }
+      const registerTokenSpy = jest.spyOn(server, 'registerToken')
 
       server.registerWallet('customchain', WalletManagerMock, CONFIG)
 
-      expect(server.getRegisteredTokens('customchain')).toEqual([])
+      expect(registerTokenSpy).not.toHaveBeenCalled()
     })
 
     test('should throw if useWdk not called', () => {
@@ -200,7 +199,7 @@ describe('WdkMcpServer', () => {
     })
 
     test('should return server instance for chaining', () => {
-      server.useWdk({ seed: SEED_PHRASE })
+      server._wdk = { registerWallet: jest.fn() }
 
       const result = server.registerWallet('ethereum', WalletManagerMock, CONFIG)
 
@@ -226,35 +225,35 @@ describe('WdkMcpServer', () => {
       FiatProtocolMock = jest.fn()
       Object.setPrototypeOf(FiatProtocolMock.prototype, FiatProtocol.prototype)
 
-      server.useWdk({ seed: SEED_PHRASE })
+      server._wdk = { registerProtocol: jest.fn() }
     })
 
     test('should add swap protocol to swap registry', () => {
       server.registerProtocol('ethereum', 'velora', SwapProtocolMock, CONFIG)
 
-      expect(server.getSwapChains()).toContain('ethereum')
-      expect(server.getSwapProtocols('ethereum')).toContain('velora')
+      expect(server._protocols.swap.has('ethereum')).toBe(true)
+      expect(server._protocols.swap.get('ethereum').has('velora')).toBe(true)
     })
 
     test('should add bridge protocol to bridge registry', () => {
       server.registerProtocol('ethereum', 'usdt0', BridgeProtocolMock, CONFIG)
 
-      expect(server.getBridgeChains()).toContain('ethereum')
-      expect(server.getBridgeProtocols('ethereum')).toContain('usdt0')
+      expect(server._protocols.bridge.has('ethereum')).toBe(true)
+      expect(server._protocols.bridge.get('ethereum').has('usdt0')).toBe(true)
     })
 
     test('should add lending protocol to lending registry', () => {
       server.registerProtocol('ethereum', 'aave', LendingProtocolMock, CONFIG)
 
-      expect(server.getLendingChains()).toContain('ethereum')
-      expect(server.getLendingProtocols('ethereum')).toContain('aave')
+      expect(server._protocols.lending.has('ethereum')).toBe(true)
+      expect(server._protocols.lending.get('ethereum').has('aave')).toBe(true)
     })
 
     test('should add fiat protocol to fiat registry', () => {
       server.registerProtocol('ethereum', 'moonpay', FiatProtocolMock, CONFIG)
 
-      expect(server.getFiatChains()).toContain('ethereum')
-      expect(server.getFiatProtocols('ethereum')).toContain('moonpay')
+      expect(server._protocols.fiat.has('ethereum')).toBe(true)
+      expect(server._protocols.fiat.get('ethereum').has('moonpay')).toBe(true)
     })
 
     test('should throw for unknown protocol type', () => {
@@ -284,29 +283,19 @@ describe('WdkMcpServer', () => {
     })
 
     test('should return chains with swap protocols', () => {
-      const SwapProtocolMock = jest.fn()
-      Object.setPrototypeOf(SwapProtocolMock.prototype, SwapProtocol.prototype)
+      server._protocols.swap.set('ethereum', new Set(['velora']))
 
-      server.useWdk({ seed: SEED_PHRASE })
-            .registerProtocol('ethereum', 'velora', SwapProtocolMock, {})
-
-      expect(server.getSwapChains()).toContain('ethereum')
+      expect(server.getSwapChains()).toEqual(['ethereum'])
     })
   })
 
   describe('getSwapProtocols', () => {
     test('should return protocol labels for chain', () => {
-      const SwapProtocolMock = jest.fn()
-      Object.setPrototypeOf(SwapProtocolMock.prototype, SwapProtocol.prototype)
-
-      server.useWdk({ seed: SEED_PHRASE })
-            .registerProtocol('ethereum', 'velora', SwapProtocolMock, {})
-            .registerProtocol('ethereum', 'uniswap', SwapProtocolMock, {})
+      server._protocols.swap.set('ethereum', new Set(['velora', 'uniswap']))
 
       const protocols = server.getSwapProtocols('ethereum')
 
-      expect(protocols).toContain('velora')
-      expect(protocols).toContain('uniswap')
+      expect(protocols).toEqual(['velora', 'uniswap'])
     })
 
     test('should return empty array for chain without protocols', () => {
@@ -320,25 +309,17 @@ describe('WdkMcpServer', () => {
     })
 
     test('should return chains with bridge protocols', () => {
-      const BridgeProtocolMock = jest.fn()
-      Object.setPrototypeOf(BridgeProtocolMock.prototype, BridgeProtocol.prototype)
+      server._protocols.bridge.set('ethereum', new Set(['usdt0']))
 
-      server.useWdk({ seed: SEED_PHRASE })
-            .registerProtocol('ethereum', 'usdt0', BridgeProtocolMock, {})
-
-      expect(server.getBridgeChains()).toContain('ethereum')
+      expect(server.getBridgeChains()).toEqual(['ethereum'])
     })
   })
 
   describe('getBridgeProtocols', () => {
     test('should return protocol labels for chain', () => {
-      const BridgeProtocolMock = jest.fn()
-      Object.setPrototypeOf(BridgeProtocolMock.prototype, BridgeProtocol.prototype)
+      server._protocols.bridge.set('ethereum', new Set(['usdt0']))
 
-      server.useWdk({ seed: SEED_PHRASE })
-            .registerProtocol('ethereum', 'usdt0', BridgeProtocolMock, {})
-
-      expect(server.getBridgeProtocols('ethereum')).toContain('usdt0')
+      expect(server.getBridgeProtocols('ethereum')).toEqual(['usdt0'])
     })
 
     test('should return empty array for chain without protocols', () => {
@@ -352,25 +333,17 @@ describe('WdkMcpServer', () => {
     })
 
     test('should return chains with lending protocols', () => {
-      const LendingProtocolMock = jest.fn()
-      Object.setPrototypeOf(LendingProtocolMock.prototype, LendingProtocol.prototype)
+      server._protocols.lending.set('ethereum', new Set(['aave']))
 
-      server.useWdk({ seed: SEED_PHRASE })
-            .registerProtocol('ethereum', 'aave', LendingProtocolMock, {})
-
-      expect(server.getLendingChains()).toContain('ethereum')
+      expect(server.getLendingChains()).toEqual(['ethereum'])
     })
   })
 
   describe('getLendingProtocols', () => {
     test('should return protocol labels for chain', () => {
-      const LendingProtocolMock = jest.fn()
-      Object.setPrototypeOf(LendingProtocolMock.prototype, LendingProtocol.prototype)
+      server._protocols.lending.set('ethereum', new Set(['aave']))
 
-      server.useWdk({ seed: SEED_PHRASE })
-            .registerProtocol('ethereum', 'aave', LendingProtocolMock, {})
-
-      expect(server.getLendingProtocols('ethereum')).toContain('aave')
+      expect(server.getLendingProtocols('ethereum')).toEqual(['aave'])
     })
 
     test('should return empty array for chain without protocols', () => {
@@ -384,25 +357,17 @@ describe('WdkMcpServer', () => {
     })
 
     test('should return chains with fiat protocols', () => {
-      const FiatProtocolMock = jest.fn()
-      Object.setPrototypeOf(FiatProtocolMock.prototype, FiatProtocol.prototype)
+      server._protocols.fiat.set('ethereum', new Set(['moonpay']))
 
-      server.useWdk({ seed: SEED_PHRASE })
-            .registerProtocol('ethereum', 'moonpay', FiatProtocolMock, {})
-
-      expect(server.getFiatChains()).toContain('ethereum')
+      expect(server.getFiatChains()).toEqual(['ethereum'])
     })
   })
 
   describe('getFiatProtocols', () => {
     test('should return protocol labels for chain', () => {
-      const FiatProtocolMock = jest.fn()
-      Object.setPrototypeOf(FiatProtocolMock.prototype, FiatProtocol.prototype)
+      server._protocols.fiat.set('ethereum', new Set(['moonpay']))
 
-      server.useWdk({ seed: SEED_PHRASE })
-            .registerProtocol('ethereum', 'moonpay', FiatProtocolMock, {})
-
-      expect(server.getFiatProtocols('ethereum')).toContain('moonpay')
+      expect(server.getFiatProtocols('ethereum')).toEqual(['moonpay'])
     })
 
     test('should return empty array for chain without protocols', () => {
@@ -415,10 +380,13 @@ describe('WdkMcpServer', () => {
       await expect(server.close()).resolves.not.toThrow()
     })
 
-    test('should not throw when wdk exists', async () => {
-      server.useWdk({ seed: SEED_PHRASE })
+    test('should call wdk.dispose when wdk exists', async () => {
+      const disposeMock = jest.fn()
+      server._wdk = { dispose: disposeMock }
 
-      await expect(server.close()).resolves.not.toThrow()
+      await server.close()
+
+      expect(disposeMock).toHaveBeenCalled()
     })
   })
 })
