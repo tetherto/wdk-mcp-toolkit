@@ -21,7 +21,9 @@
   "scripts": {
     "build:types": "tsc",
     "lint": "standard",
-    "lint:fix": "standard --fix"
+    "lint:fix": "standard --fix",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --watch"
   },
   "exports": {
     ".": {
@@ -43,7 +45,8 @@
   "standard": {
     "ignore": [
       "types/**/*.d.ts",
-      "examples/**/*.js"
+      "examples/**/*.js",
+      "tests/**/*.js"
     ]
   },
   "dependencies": {
@@ -55,6 +58,7 @@
     "zod": "^3.24.0"
   },
   "devDependencies": {
+    "jest": "^29.7.0",
     "standard": "17.1.2",
     "typescript": "^5.8.3"
   }
