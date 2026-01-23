@@ -20,6 +20,8 @@ import { BitfinexPricingClient } from '@tetherto/wdk-pricing-bitfinex-http'
 import { WdkIndexerClient } from '@tetherto/wdk-indexer-http'
 
 /** @typedef {import('@tetherto/wdk-indexer-http').WdkIndexerConfig} WdkIndexerConfig */
+/** @typedef {typeof import('@tetherto/wdk-wallet').default} WalletManager */
+
 
 /**
  * @typedef {Object} TokenInfo
@@ -181,7 +183,16 @@ export class WdkMcpServer extends McpServer {
    * @type {WDK | null}
    */
   get wdk () {
-    return this._wdk
+    if (!this._wdk) return null
+
+    return new Proxy(this._wdk, {
+      get: (target, prop) => {
+        if (['registerWallet', 'registerProtocol', 'registerMiddleware'].includes(prop)) {
+          throw new Error(`Use WdkMcpServer#${prop}() instead of wdk.${prop}()`)
+        }
+        return target[prop]
+      }
+    })
   }
 
   /**
@@ -311,7 +322,7 @@ export class WdkMcpServer extends McpServer {
   /**
    * Registers a new wallet to the server.
    *
-   * @template {WDK} W
+   * @template {typeof WalletManager} W
    * @param {string} blockchain - The name of the blockchain (e.g., "ethereum").
    * @param {W} WalletManager - The wallet manager class.
    * @param {ConstructorParameters<W>[1]} config - The configuration object.

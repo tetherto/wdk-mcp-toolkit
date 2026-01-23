@@ -18,6 +18,32 @@ describe('WdkMcpServer', () => {
     server = new WdkMcpServer('test-server', '1.0.0')
   })
 
+  describe('wdk', () => {
+    test('should allow access to non-blocked methods', () => {
+      server.useWdk({ seed: SEED_PHRASE })
+
+      expect(() => server.wdk.getAccount).not.toThrow()
+    })
+
+    test('should throw when accessing registerWallet directly', () => {
+      server.useWdk({ seed: SEED_PHRASE })
+
+      expect(() => server.wdk.registerWallet).toThrow('Use WdkMcpServer#registerWallet() instead of wdk.registerWallet()')
+    })
+
+    test('should throw when accessing registerProtocol directly', () => {
+      server.useWdk({ seed: SEED_PHRASE })
+
+      expect(() => server.wdk.registerProtocol).toThrow('Use WdkMcpServer#registerProtocol() instead of wdk.registerProtocol()')
+    })
+
+    test('should throw when accessing registerMiddleware directly', () => {
+      server.useWdk({ seed: SEED_PHRASE })
+
+      expect(() => server.wdk.registerMiddleware).toThrow('Use WdkMcpServer#registerMiddleware() instead of wdk.registerMiddleware()')
+    })
+  })
+
   describe('useWdk', () => {
     test('should create WDK instance with provided seed', () => {
       server.useWdk({ seed: SEED_PHRASE })

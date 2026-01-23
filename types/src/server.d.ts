@@ -154,14 +154,14 @@ export class WdkMcpServer extends McpServer {
     /**
      * Registers a new wallet to the server.
      *
-     * @template {WDK} W
+     * @template {typeof WalletManager} W
      * @param {string} blockchain - The name of the blockchain (e.g., "ethereum").
      * @param {W} WalletManager - The wallet manager class.
      * @param {ConstructorParameters<W>[1]} config - The configuration object.
      * @returns {WdkMcpServer} The server instance.
      * @throws {Error} If useWdk() has not been called.
      */
-    registerWallet<W extends WDK>(blockchain: string, WalletManager: W, config: ConstructorParameters<W>[1]): WdkMcpServer;
+    registerWallet<W extends typeof WalletManager>(blockchain: string, WalletManager: W, config: ConstructorParameters<W>[1]): WdkMcpServer;
     /**
      * Registers a protocol for a blockchain.
      *
@@ -229,6 +229,7 @@ export class WdkMcpServer extends McpServer {
     getFiatProtocols(chain: string): string[];
 }
 export type WdkIndexerConfig = import("@tetherto/wdk-indexer-http").WdkIndexerConfig;
+export type WalletManager = typeof import("@tetherto/wdk-wallet").default;
 export type TokenInfo = {
     /**
      * - Token contract address.
