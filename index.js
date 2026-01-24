@@ -29,9 +29,9 @@
 export { WdkMcpServer, CHAINS, DEFAULT_TOKENS } from './src/server.js'
 
 export {
-  walletTools,
-  walletReadTools,
-  walletWriteTools,
+  WALLET_TOOLS,
+  WALLET_READ_TOOLS,
+  WALLET_WRITE_TOOLS,
   getAddress,
   getBalance,
   getFeeRates,
@@ -46,37 +46,37 @@ export {
 } from './src/tools/wallet/index.js'
 
 export {
-  pricingTools,
+  PRICING_TOOLS,
   getCurrentPrice,
   getHistoricalPrice
 } from './src/tools/pricing/index.js'
 
 export {
-  indexerTools,
+  INDEXER_TOOLS,
   getTokenTransfers,
   getIndexerTokenBalance
 } from './src/tools/indexer/index.js'
 
 export {
-  swapTools,
-  swapReadTools,
-  swapWriteTools,
+  SWAP_TOOLS,
+  SWAP_READ_TOOLS,
+  SWAP_WRITE_TOOLS,
   quoteSwap,
   swap
 } from './src/tools/swap/index.js'
 
 export {
-  bridgeTools,
-  bridgeReadTools,
-  bridgeWriteTools,
+  BRIDGE_TOOLS,
+  BRIDGE_READ_TOOLS,
+  BRIDGE_WRITE_TOOLS,
   quoteBridge,
   bridge
 } from './src/tools/bridge/index.js'
 
 export {
-  lendingTools,
-  lendingReadTools,
-  lendingWriteTools,
+  LENDING_TOOLS,
+  LENDING_READ_TOOLS,
+  LENDING_WRITE_TOOLS,
   quoteSupply,
   supply,
   quoteWithdraw,
@@ -88,9 +88,9 @@ export {
 } from './src/tools/lending/index.js'
 
 export {
-  fiatTools,
-  fiatReadTools,
-  fiatWriteTools,
+  FIAT_TOOLS,
+  FIAT_READ_TOOLS,
+  FIAT_WRITE_TOOLS,
   quoteBuy,
   buy,
   quoteSell,

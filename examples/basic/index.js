@@ -8,13 +8,13 @@ import Usdt0ProtocolEvm from '@tetherto/wdk-protocol-bridge-usdt0-evm'
 import AaveProtocolEvm from '@tetherto/wdk-protocol-lending-aave-evm'
 import MoonPayProtocol from '@tetherto/wdk-protocol-fiat-moonpay'
 import { WdkMcpServer } from '../../src/server.js'
-import { walletTools } from '../../src/tools/wallet/index.js'
-import { pricingTools } from '../../src/tools/pricing/index.js'
-import { indexerTools } from '../../src/tools/indexer/index.js'
-import { swapTools } from '../../src/tools/swap/index.js'
-import { bridgeTools } from '../../src/tools/bridge/index.js'
-import { lendingTools } from '../../src/tools/lending/index.js'
-import { fiatTools } from '../../src/tools/fiat/index.js'
+import { WALLET_TOOLS } from '../../src/tools/wallet/index.js'
+import { PRICING_TOOLS } from '../../src/tools/pricing/index.js'
+import { INDEXER_TOOLS } from '../../src/tools/indexer/index.js'
+import { SWAP_TOOLS } from '../../src/tools/swap/index.js'
+import { BRIDGE_TOOLS } from '../../src/tools/bridge/index.js'
+import { LENDING_TOOLS } from '../../src/tools/lending/index.js'
+import { FIAT_TOOLS } from '../../src/tools/fiat/index.js'
 
 async function main () {
   const server = new WdkMcpServer('wdk-mcp-server', '1.0.0')
@@ -40,13 +40,13 @@ async function main () {
     .usePricing()
     .useIndexer({ apiKey: process.env.WDK_INDEXER_API_KEY })
     .registerTools([
-      ...walletTools,
-      ...pricingTools,
-      ...indexerTools,
-      ...swapTools,
-      ...bridgeTools,
-      ...lendingTools,
-      ...fiatTools
+      ...WALLET_TOOLS,
+      ...PRICING_TOOLS,
+      ...INDEXER_TOOLS,
+      ...SWAP_TOOLS,
+      ...BRIDGE_TOOLS,
+      ...LENDING_TOOLS,
+      ...FIAT_TOOLS
     ])
 
   const transport = new StdioServerTransport()

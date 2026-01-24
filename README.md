@@ -60,7 +60,7 @@ Add `"type": "module"` to your `package.json` for ES module support:
 ### Creating a Basic MCP Server
 
 ```javascript
-import { WdkMcpServer, walletTools, pricingTools, indexerTools } from '@tetherto/wdk-mcp-toolkit'
+import { WdkMcpServer, WALLET_TOOLS, PRICING_TOOLS, INDEXER_TOOLS } from '@tetherto/wdk-mcp-toolkit'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import WalletManagerEvm from '@tetherto/wdk-wallet-evm'
 import WalletManagerBtc from '@tetherto/wdk-wallet-btc'
@@ -75,7 +75,7 @@ const server = new WdkMcpServer('my-wallet-server', '1.0.0')
   })
   .usePricing()
   .useIndexer({ apiKey: process.env.WDK_INDEXER_API_KEY })
-  .registerTools([...walletTools, ...pricingTools, ...indexerTools])
+  .registerTools([...WALLET_TOOLS, ...PRICING_TOOLS, ...INDEXER_TOOLS])
 
 const transport = new StdioServerTransport()
 await server.connect(transport)
@@ -130,19 +130,19 @@ console.log('USDC address:', usdc.address)
 ### Using Read-Only vs Write Tools
 
 ```javascript
-import { walletReadTools, walletWriteTools } from '@tetherto/wdk-mcp-toolkit'
+import { WALLET_READ_TOOLS, WALLET_WRITE_TOOLS } from '@tetherto/wdk-mcp-toolkit'
 
 // For read-only access (balance checks, address lookups, fee estimates)
 const readOnlyServer = new WdkMcpServer('read-only-server', '1.0.0')
   .useWdk({ seed: process.env.WDK_SEED })
   .registerWallet('ethereum', WalletManagerEvm, { provider: '...' })
-  .registerTools(walletReadTools)
+  .registerTools(WALLET_READ_TOOLS)
 
 // For full access (includes sendTransaction, transfer, sign)
 const fullAccessServer = new WdkMcpServer('full-access-server', '1.0.0')
   .useWdk({ seed: process.env.WDK_SEED })
   .registerWallet('ethereum', WalletManagerEvm, { provider: '...' })
-  .registerTools(walletWriteTools)
+  .registerTools(WALLET_WRITE_TOOLS)
 ```
 
 > **💡 Best Practice:** Register only the tools you need. Large tool sets increase context size, which can lead to slower responses, higher costs, and potential hallucinations where the AI invokes incorrect tools. If you only need to check balances, import and register just that tool:
@@ -171,9 +171,9 @@ const server = new WdkMcpServer('my-server', '1.0.0')
   .useIndexer({ apiKey: process.env.API_KEY }) // server.indexerClient is now available
 
 // 2. Register tools that use those capabilities
-server.registerTools(walletTools)   // These tools call server.wdk.*
-server.registerTools(pricingTools)  // These tools call server.pricingClient.*
-server.registerTools(indexerTools)  // These tools call server.indexerClient.*
+server.registerTools(WALLET_TOOLS)   // These tools call server.wdk.*
+server.registerTools(PRICING_TOOLS)  // These tools call server.pricingClient.*
+server.registerTools(INDEXER_TOOLS)  // These tools call server.indexerClient.*
 ```
 
 **Writing custom tools:**
@@ -271,13 +271,13 @@ This pattern allows you to:
 
 If a tool requires a capability that wasn't enabled, it will fail at runtime. The built-in tools check for this:
 
-- `walletTools` require `useWdk()` and `registerWallet()`
-- `pricingTools` require `usePricing()`
-- `indexerTools` require `useIndexer()`
-- `swapTools` require `useWdk()` and `registerProtocol()` with a swap protocol
-- `bridgeTools` require `useWdk()` and `registerProtocol()` with a bridge protocol
-- `lendingTools` require `useWdk()` and `registerProtocol()` with a lending protocol
-- `fiatTools` require `useWdk()` and `registerProtocol()` with a fiat protocol
+- `WALLET_TOOLS` require `useWdk()` and `registerWallet()`
+- `PRICING_TOOLS` require `usePricing()`
+- `INDEXER_TOOLS` require `useIndexer()`
+- `SWAP_TOOLS` require `useWdk()` and `registerProtocol()` with a swap protocol
+- `BRIDGE_TOOLS` require `useWdk()` and `registerProtocol()` with a bridge protocol
+- `LENDING_TOOLS` require `useWdk()` and `registerProtocol()` with a lending protocol
+- `FIAT_TOOLS` require `useWdk()` and `registerProtocol()` with a fiat protocol
 
 ## 🖥️ Using with VS Code GitHub Copilot Chat
 
@@ -619,14 +619,14 @@ Utility method for bulk tool registration. This is a convenience wrapper we adde
 **Example:**
 
 ```javascript
-import { walletTools, pricingTools } from '@tetherto/wdk-mcp-toolkit'
+import { WALLET_TOOLS, PRICING_TOOLS } from '@tetherto/wdk-mcp-toolkit'
 
 // Register built-in tool arrays
-server.registerTools([...walletTools, ...pricingTools])
+server.registerTools([...WALLET_TOOLS, ...PRICING_TOOLS])
 
 // Or mix with custom tools
 server.registerTools([
-  ...walletTools,
+  ...WALLET_TOOLS,
   myCustomTool,
   anotherCustomTool
 ])
@@ -768,7 +768,7 @@ Enable fiat on/off-ramp operations through registered fiat protocols (e.g., Moon
 - **Seed Phrase Security**: Always store your seed phrase securely and never share it. Use environment variables (`WDK_SEED`) instead of hardcoding.
 - **API Key Security**: Store API keys in environment variables, never in source code.
 - **Memory Cleanup**: The `close()` method automatically calls `dispose()` on the WDK instance to clear private keys from memory.
-- **Read vs Write Tools**: Use `walletReadTools` for read-only access when write operations are not needed.
+- **Read vs Write Tools**: Use `WALLET_READ_TOOLS` for read-only access when write operations are not needed.
 - **Elicitations for Write Operations**: For maximum safety, use an MCP client that supports elicitations (like VS Code GitHub Copilot or Cursor) for write operations to ensure human approval before transactions execute.
 - **MCP Transport Security**: Use secure transports (stdio, SSE with TLS) in production environments.
 - **Tool Annotations**: All tools include proper `readOnlyHint` and `destructiveHint` annotations for MCP clients.

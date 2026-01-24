@@ -61,9 +61,4 @@ export const LENDING_TOOLS = [
   ...LENDING_WRITE_TOOLS
 ]
 
-// camelCase aliases for convenience
-export { LENDING_TOOLS as lendingTools }
-export { LENDING_READ_TOOLS as lendingReadTools }
-export { LENDING_WRITE_TOOLS as lendingWriteTools }
-
 export { quoteSupply, supply, quoteWithdraw, withdraw, quoteBorrow, borrow, quoteRepay, repay }
