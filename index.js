@@ -29,9 +29,9 @@
 export { WdkMcpServer, CHAINS, DEFAULT_TOKENS } from './src/server.js'
 
 export {
-  walletTools,
-  walletReadTools,
-  walletWriteTools,
+  WALLET_TOOLS,
+  WALLET_READ_TOOLS,
+  WALLET_WRITE_TOOLS,
   getAddress,
   getBalance,
   getFeeRates,
@@ -46,16 +46,60 @@ export {
 } from './src/tools/wallet/index.js'
 
 export {
-  pricingTools,
+  PRICING_TOOLS,
   getCurrentPrice,
   getHistoricalPrice
 } from './src/tools/pricing/index.js'
 
 export {
-  indexerTools,
+  INDEXER_TOOLS,
   getTokenTransfers,
   getIndexerTokenBalance
 } from './src/tools/indexer/index.js'
+
+export {
+  SWAP_TOOLS,
+  SWAP_READ_TOOLS,
+  SWAP_WRITE_TOOLS,
+  quoteSwap,
+  swap
+} from './src/tools/swap/index.js'
+
+export {
+  BRIDGE_TOOLS,
+  BRIDGE_READ_TOOLS,
+  BRIDGE_WRITE_TOOLS,
+  quoteBridge,
+  bridge
+} from './src/tools/bridge/index.js'
+
+export {
+  LENDING_TOOLS,
+  LENDING_READ_TOOLS,
+  LENDING_WRITE_TOOLS,
+  quoteSupply,
+  supply,
+  quoteWithdraw,
+  withdraw,
+  quoteBorrow,
+  borrow,
+  quoteRepay,
+  repay
+} from './src/tools/lending/index.js'
+
+export {
+  FIAT_TOOLS,
+  FIAT_READ_TOOLS,
+  FIAT_WRITE_TOOLS,
+  quoteBuy,
+  buy,
+  quoteSell,
+  sell,
+  getTransactionDetail,
+  getSupportedCryptoAssets,
+  getSupportedFiatCurrencies,
+  getSupportedCountries
+} from './src/tools/fiat/index.js'
 
 export {
   parseAmountToBaseUnits,

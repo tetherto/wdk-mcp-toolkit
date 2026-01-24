@@ -31,10 +31,6 @@
       "types": "./types/index.d.ts",
       "default": "./index.js"
     },
-    "./tools/*": {
-      "types": "./types/tools/*.d.ts",
-      "default": "./src/tools/*.js"
-    },
     "./package": {
       "default": "./package.json"
     }
