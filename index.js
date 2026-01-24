@@ -58,6 +58,50 @@ export {
 } from './src/tools/indexer/index.js'
 
 export {
+  swapTools,
+  swapReadTools,
+  swapWriteTools,
+  quoteSwap,
+  swap
+} from './src/tools/swap/index.js'
+
+export {
+  bridgeTools,
+  bridgeReadTools,
+  bridgeWriteTools,
+  quoteBridge,
+  bridge
+} from './src/tools/bridge/index.js'
+
+export {
+  lendingTools,
+  lendingReadTools,
+  lendingWriteTools,
+  quoteSupply,
+  supply,
+  quoteWithdraw,
+  withdraw,
+  quoteBorrow,
+  borrow,
+  quoteRepay,
+  repay
+} from './src/tools/lending/index.js'
+
+export {
+  fiatTools,
+  fiatReadTools,
+  fiatWriteTools,
+  quoteBuy,
+  buy,
+  quoteSell,
+  sell,
+  getTransactionDetail,
+  getSupportedCryptoAssets,
+  getSupportedFiatCurrencies,
+  getSupportedCountries
+} from './src/tools/fiat/index.js'
+
+export {
   parseAmountToBaseUnits,
   formatBaseUnitsToAmount,
   AmountParseError,

@@ -60,10 +60,7 @@ Add `"type": "module"` to your `package.json` for ES module support:
 ### Creating a Basic MCP Server
 
 ```javascript
-import { WdkMcpServer } from '@tetherto/wdk-mcp-toolkit'
-import { walletTools } from '@tetherto/wdk-mcp-toolkit/tools/wallet'
-import { pricingTools } from '@tetherto/wdk-mcp-toolkit/tools/pricing'
-import { indexerTools } from '@tetherto/wdk-mcp-toolkit/tools/indexer'
+import { WdkMcpServer, walletTools, pricingTools, indexerTools } from '@tetherto/wdk-mcp-toolkit'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import WalletManagerEvm from '@tetherto/wdk-wallet-evm'
 import WalletManagerBtc from '@tetherto/wdk-wallet-btc'
@@ -133,7 +130,7 @@ console.log('USDC address:', usdc.address)
 ### Using Read-Only vs Write Tools
 
 ```javascript
-import { walletReadTools, walletWriteTools } from '@tetherto/wdk-mcp-toolkit/tools/wallet'
+import { walletReadTools, walletWriteTools } from '@tetherto/wdk-mcp-toolkit'
 
 // For read-only access (balance checks, address lookups, fee estimates)
 const readOnlyServer = new WdkMcpServer('read-only-server', '1.0.0')
@@ -622,8 +619,7 @@ Utility method for bulk tool registration. This is a convenience wrapper we adde
 **Example:**
 
 ```javascript
-import { walletTools } from '@tetherto/wdk-mcp-toolkit/tools/wallet'
-import { pricingTools } from '@tetherto/wdk-mcp-toolkit/tools/pricing'
+import { walletTools, pricingTools } from '@tetherto/wdk-mcp-toolkit'
 
 // Register built-in tool arrays
 server.registerTools([...walletTools, ...pricingTools])
