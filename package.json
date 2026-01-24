@@ -29,7 +29,7 @@
   "exports": {
     ".": {
       "types": "./types/index.d.ts",
-      "default": "./src/index.js"
+      "default": "./index.js"
     },
     "./tools/*": {
       "types": "./types/tools/*.d.ts",

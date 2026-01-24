@@ -61,4 +61,9 @@ export const FIAT_TOOLS = [
   ...FIAT_WRITE_TOOLS
 ]
 
+// camelCase aliases for convenience
+export { FIAT_TOOLS as fiatTools }
+export { FIAT_READ_TOOLS as fiatReadTools }
+export { FIAT_WRITE_TOOLS as fiatWriteTools }
+
 export { quoteBuy, buy, quoteSell, sell, getTransactionDetail, getSupportedCryptoAssets, getSupportedFiatCurrencies, getSupportedCountries }

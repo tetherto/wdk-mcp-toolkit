@@ -121,7 +121,7 @@ server
     decimals: 6
   })
   .registerToken('ethereum', 'DAI', {
-    address: '0x6B175474E89094C44Da98b954EesE8Ff8cB6dB',
+    address: '0x6b175474e89094c44da98b954eedeac495271d0f',
     decimals: 18
   })
 
@@ -162,7 +162,7 @@ const fullAccessServer = new WdkMcpServer('full-access-server', '1.0.0')
 |--------|---------|------------------|
 | `useWdk(config)` | Wallet operations | `server.wdk` |
 | `usePricing()` | Price data | `server.pricingClient` |
-| `useIndexer(config)` | Transaction history | `server.indexer.apiKey` |
+| `useIndexer(config)` | Transaction history | `server.indexerClient` |
 
 **How it works:**
 
@@ -171,12 +171,12 @@ const fullAccessServer = new WdkMcpServer('full-access-server', '1.0.0')
 const server = new WdkMcpServer('my-server', '1.0.0')
   .useWdk({ seed: process.env.WDK_SEED })      // server.wdk is now available
   .usePricing()                                 // server.pricingClient is now available
-  .useIndexer({ apiKey: process.env.API_KEY }) // server.indexer.apiKey is now available
+  .useIndexer({ apiKey: process.env.API_KEY }) // server.indexerClient is now available
 
 // 2. Register tools that use those capabilities
 server.registerTools(walletTools)   // These tools call server.wdk.*
 server.registerTools(pricingTools)  // These tools call server.pricingClient.*
-server.registerTools(indexerTools)  // These tools use server.indexer.apiKey
+server.registerTools(indexerTools)  // These tools call server.indexerClient.*
 ```
 
 **Writing custom tools:**
@@ -277,6 +277,10 @@ If a tool requires a capability that wasn't enabled, it will fail at runtime. Th
 - `walletTools` require `useWdk()` and `registerWallet()`
 - `pricingTools` require `usePricing()`
 - `indexerTools` require `useIndexer()`
+- `swapTools` require `useWdk()` and `registerProtocol()` with a swap protocol
+- `bridgeTools` require `useWdk()` and `registerProtocol()` with a bridge protocol
+- `lendingTools` require `useWdk()` and `registerProtocol()` with a lending protocol
+- `fiatTools` require `useWdk()` and `registerProtocol()` with a fiat protocol
 
 ## 🖥️ Using with VS Code GitHub Copilot Chat
 
@@ -285,9 +289,14 @@ You can use this MCP server with [VS Code GitHub Copilot Chat](https://code.visu
 ### Step 1: Clone the repository
 
 ```bash
-git clone https://github.com/AlibudaLab/wdk-mcp-toolkit.git
+git clone https://github.com/tetherto/wdk-mcp-toolkit.git
 cd wdk-mcp-toolkit
 npm install
+
+# Install wallet and protocol modules for the example
+npm install @tetherto/wdk-wallet-btc @tetherto/wdk-wallet-evm
+npm install @tetherto/wdk-protocol-swap-velora-evm @tetherto/wdk-protocol-bridge-usdt0-evm
+npm install @tetherto/wdk-protocol-lending-aave-evm @tetherto/wdk-protocol-fiat-moonpay
 ```
 
 ### Step 2: Configure VS Code
@@ -375,8 +384,17 @@ const server = new WdkMcpServer('my-wallet-server', '1.0.0')
 |--------|-------------|---------|
 | `useWdk(config)` | Initializes the WDK with a seed phrase | `WdkMcpServer` |
 | `registerWallet(blockchain, WalletManager, config)` | Registers a wallet for a blockchain | `WdkMcpServer` |
-| `useIndexer(config)` | Enables the WDK Indexer for transaction history | `WdkMcpServer` |
+| `useIndexer(config)` | Enables the WDK Indexer client for transaction history | `WdkMcpServer` |
 | `usePricing()` | Enables the Bitfinex pricing client | `WdkMcpServer` |
+| `registerProtocol(chain, label, Protocol, config)` | Registers a DeFi protocol (swap, bridge, lending, fiat) | `WdkMcpServer` |
+| `getSwapChains()` | Returns chains with swap protocols registered | `string[]` |
+| `getSwapProtocols(chain)` | Returns swap protocol labels for a chain | `string[]` |
+| `getBridgeChains()` | Returns chains with bridge protocols registered | `string[]` |
+| `getBridgeProtocols(chain)` | Returns bridge protocol labels for a chain | `string[]` |
+| `getLendingChains()` | Returns chains with lending protocols registered | `string[]` |
+| `getLendingProtocols(chain)` | Returns lending protocol labels for a chain | `string[]` |
+| `getFiatChains()` | Returns chains with fiat protocols registered | `string[]` |
+| `getFiatProtocols(chain)` | Returns fiat protocol labels for a chain | `string[]` |
 | `registerToken(chain, symbol, token)` | Registers a token address mapping | `WdkMcpServer` |
 | `getTokenInfo(chain, symbol)` | Returns token info for a symbol | `TokenInfo \| undefined` |
 | `getRegisteredTokens(chain)` | Returns all registered token symbols | `string[]` |
@@ -436,9 +454,55 @@ server.registerWallet('bitcoin', WalletManagerBtc, {
 })
 ```
 
+#### registerProtocol(chain, label, Protocol, config)
+
+Registers a DeFi protocol for a blockchain. Protocols enable swap, bridge, lending, and fiat on/off-ramp functionality. The protocol type is automatically detected from the class inheritance.
+
+**Parameters:**
+
+- `chain` (string): The blockchain name (e.g., "ethereum")
+- `label` (string): The protocol label (e.g., "velora", "aave", "moonpay")
+- `Protocol` (class): The protocol class (must extend SwapProtocol, BridgeProtocol, LendingProtocol, or FiatProtocol)
+- `config` (object, optional): Protocol-specific configuration
+
+**Returns:** `WdkMcpServer` - The server instance for chaining
+
+**Throws:** `Error` - If `useWdk()` has not been called, or if unknown protocol type
+
+**Example:**
+
+```javascript
+import VeloraProtocolEvm from '@tetherto/wdk-protocol-swap-velora-evm'
+import Usdt0ProtocolEvm from '@tetherto/wdk-protocol-bridge-usdt0-evm'
+import AaveProtocolEvm from '@tetherto/wdk-protocol-lending-aave-evm'
+import MoonPayProtocol from '@tetherto/wdk-protocol-fiat-moonpay'
+
+server
+  // Swap protocol - enables token swaps
+  .registerProtocol('ethereum', 'velora', VeloraProtocolEvm)
+
+  // Bridge protocol - enables cross-chain transfers
+  .registerProtocol('ethereum', 'usdt0', Usdt0ProtocolEvm)
+
+  // Lending protocol - enables supply, borrow, withdraw, repay
+  .registerProtocol('ethereum', 'aave', AaveProtocolEvm)
+
+  // Fiat protocol - enables buy/sell crypto with fiat
+  .registerProtocol('ethereum', 'moonpay', MoonPayProtocol, {
+    secretKey: process.env.MOONPAY_SECRET_KEY,
+    apiKey: process.env.MOONPAY_API_KEY
+  })
+```
+
+**Learn more about protocols:**
+- [Swap Modules](https://docs.wallet.tether.io/sdk/swap-modules)
+- [Bridge Modules](https://docs.wallet.tether.io/sdk/bridge-modules)
+- [Lending Modules](https://docs.wallet.tether.io/sdk/lending-modules)
+- [Fiat Modules](https://docs.wallet.tether.io/sdk/fiat-modules)
+
 #### useIndexer(config)
 
-Enables transaction history capabilities by storing the Indexer API key. After calling this, `server.indexer.apiKey` becomes available for tools to use when querying the WDK Indexer API.
+Enables transaction history capabilities by initializing the WDK Indexer client. After calling this, `server.indexerClient` becomes available for tools to use.
 
 **Parameters:**
 
@@ -454,10 +518,9 @@ Enables transaction history capabilities by storing the Indexer API key. After c
 ```javascript
 server.useIndexer({ apiKey: process.env.WDK_INDEXER_API_KEY })
 
-// Now tools can access server.indexer.apiKey
-const response = await fetch(url, {
-  headers: { 'x-api-key': server.indexer.apiKey }
-})
+// Now tools can access server.indexerClient
+const transfers = await server.indexerClient.getTokenTransfers('ethereum', 'usdt', address)
+const balance = await server.indexerClient.getTokenBalance('ethereum', 'usdt', address)
 ```
 
 #### usePricing()
@@ -656,6 +719,54 @@ Pre-configured USDT token addresses for common chains. These are automatically r
 | `getTokenTransfers` | Get token transfer history for an address |
 | `getIndexerTokenBalance` | Get token balance via indexer API |
 
+### Swap Tools
+
+Enable token swaps through registered swap protocols (e.g., Velora). See [Swap Modules](https://docs.wallet.tether.io/sdk/swap-modules) for available protocols.
+
+| Tool | Category | Description |
+|------|----------|-------------|
+| `quoteSwap` | Read | Get a quote for swapping tokens |
+| `swap` | Write | Execute a token swap |
+
+### Bridge Tools
+
+Enable cross-chain token transfers through registered bridge protocols (e.g., USDT0). See [Bridge Modules](https://docs.wallet.tether.io/sdk/bridge-modules) for available protocols.
+
+| Tool | Category | Description |
+|------|----------|-------------|
+| `quoteBridge` | Read | Get a quote for bridging tokens |
+| `bridge` | Write | Execute a cross-chain bridge transfer |
+
+### Lending Tools
+
+Enable DeFi lending operations through registered lending protocols (e.g., Aave). See [Lending Modules](https://docs.wallet.tether.io/sdk/lending-modules) for available protocols.
+
+| Tool | Category | Description |
+|------|----------|-------------|
+| `quoteSupply` | Read | Get a quote for supplying tokens |
+| `supply` | Write | Supply tokens to a lending protocol |
+| `quoteWithdraw` | Read | Get a quote for withdrawing tokens |
+| `withdraw` | Write | Withdraw tokens from a lending protocol |
+| `quoteBorrow` | Read | Get a quote for borrowing tokens |
+| `borrow` | Write | Borrow tokens from a lending protocol |
+| `quoteRepay` | Read | Get a quote for repaying borrowed tokens |
+| `repay` | Write | Repay borrowed tokens |
+
+### Fiat Tools
+
+Enable fiat on/off-ramp operations through registered fiat protocols (e.g., MoonPay). See [Fiat Modules](https://docs.wallet.tether.io/sdk/fiat-modules) for available protocols.
+
+| Tool | Category | Description |
+|------|----------|-------------|
+| `quoteBuy` | Read | Get a quote for buying crypto with fiat |
+| `buy` | Write | Execute a fiat-to-crypto purchase |
+| `quoteSell` | Read | Get a quote for selling crypto for fiat |
+| `sell` | Write | Execute a crypto-to-fiat sale |
+| `getTransactionDetail` | Read | Get details of a fiat transaction |
+| `getSupportedCryptoAssets` | Read | Get list of supported cryptocurrencies |
+| `getSupportedFiatCurrencies` | Read | Get list of supported fiat currencies |
+| `getSupportedCountries` | Read | Get list of supported countries |
+
 ## 🔒 Security Considerations
 
 - **Seed Phrase Security**: Always store your seed phrase securely and never share it. Use environment variables (`WDK_SEED`) instead of hardcoding.
@@ -696,6 +807,8 @@ npm run test:coverage
 ```
 src/
 ├── server.js              # WdkMcpServer class, CHAINS, DEFAULT_TOKENS
+├── utils/                 # Utility functions
+│   └── amount.js          # Amount parsing and formatting
 └── tools/
     ├── wallet/            # Wallet operation tools
     │   ├── index.js       # Tool exports
@@ -714,11 +827,38 @@ src/
     │   ├── index.js
     │   ├── getCurrentPrice.js
     │   └── getHistoricalPrice.js
-    └── indexer/           # Transaction history tools
+    ├── indexer/           # Transaction history tools
+    │   ├── index.js
+    │   ├── getTokenTransfers.js
+    │   └── getTokenBalance.js
+    ├── swap/              # Token swap tools
+    │   ├── index.js
+    │   ├── quoteSwap.js
+    │   └── swap.js
+    ├── bridge/            # Cross-chain bridge tools
+    │   ├── index.js
+    │   ├── quoteBridge.js
+    │   └── bridge.js
+    ├── lending/           # DeFi lending tools
+    │   ├── index.js
+    │   ├── quoteSupply.js
+    │   ├── supply.js
+    │   ├── quoteWithdraw.js
+    │   ├── withdraw.js
+    │   ├── quoteBorrow.js
+    │   ├── borrow.js
+    │   ├── quoteRepay.js
+    │   └── repay.js
+    └── fiat/              # Fiat on/off-ramp tools
         ├── index.js
-        ├── constants.js
-        ├── getTokenTransfers.js
-        └── getTokenBalance.js
+        ├── quoteBuy.js
+        ├── buy.js
+        ├── quoteSell.js
+        ├── sell.js
+        ├── getTransactionDetail.js
+        ├── getSupportedCryptoAssets.js
+        ├── getSupportedFiatCurrencies.js
+        └── getSupportedCountries.js
 ```
 
 ## 📜 License

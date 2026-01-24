@@ -29,6 +29,9 @@ export const INDEXER_TOOLS = [
   getIndexerTokenBalance
 ]
 
+// camelCase alias for convenience
+export { INDEXER_TOOLS as indexerTools }
+
 export {
   getTokenTransfers,
   getIndexerTokenBalance

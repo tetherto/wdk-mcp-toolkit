@@ -42,4 +42,9 @@ export const BRIDGE_WRITE_TOOLS = [bridge]
  */
 export const BRIDGE_TOOLS = [...BRIDGE_READ_TOOLS, ...BRIDGE_WRITE_TOOLS]
 
+// camelCase aliases for convenience
+export { BRIDGE_TOOLS as bridgeTools }
+export { BRIDGE_READ_TOOLS as bridgeReadTools }
+export { BRIDGE_WRITE_TOOLS as bridgeWriteTools }
+
 export { quoteBridge, bridge }

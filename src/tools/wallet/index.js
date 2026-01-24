@@ -67,6 +67,11 @@ export const WALLET_TOOLS = [
   ...WALLET_WRITE_TOOLS
 ]
 
+// camelCase aliases for convenience
+export { WALLET_TOOLS as walletTools }
+export { WALLET_READ_TOOLS as walletReadTools }
+export { WALLET_WRITE_TOOLS as walletWriteTools }
+
 export {
   getAddress,
   getBalance,

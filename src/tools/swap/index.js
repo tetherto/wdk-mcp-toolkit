@@ -42,4 +42,9 @@ export const SWAP_WRITE_TOOLS = [swap]
  */
 export const SWAP_TOOLS = [...SWAP_READ_TOOLS, ...SWAP_WRITE_TOOLS]
 
+// camelCase aliases for convenience
+export { SWAP_TOOLS as swapTools }
+export { SWAP_READ_TOOLS as swapReadTools }
+export { SWAP_WRITE_TOOLS as swapWriteTools }
+
 export { quoteSwap, swap }

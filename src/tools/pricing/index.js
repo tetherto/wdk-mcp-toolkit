@@ -29,6 +29,9 @@ export const PRICING_TOOLS = [
   getHistoricalPrice
 ]
 
+// camelCase alias for convenience
+export { PRICING_TOOLS as pricingTools }
+
 export {
   getCurrentPrice,
   getHistoricalPrice
