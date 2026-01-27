@@ -27,32 +27,32 @@ const DEPENDENCIES = [
   {
     name: '@tetherto/wdk-wallet-btc',
     description: 'Bitcoin wallet support',
-    capabilities: ['Send and receive BTC', 'Check BTC balance', 'Fee estimation']
+    capabilities: ['Interact with Bitcoin blockchain']
   },
   {
     name: '@tetherto/wdk-wallet-evm',
     description: 'Ethereum & EVM-compatible chains support',
-    capabilities: ['Ethereum, Arbitrum, Polygon, and other EVM chains', 'ERC-20 token transfers', 'Smart contract interactions']
+    capabilities: ['Interact with EVM blockchains']
   },
   {
     name: '@tetherto/wdk-protocol-swap-velora-evm',
     description: 'Token swap protocol (Velora)',
-    capabilities: ['Swap tokens on EVM chains', 'Get swap quotes', 'DEX aggregation']
+    capabilities: ['Swap tokens on EVM chains']
   },
   {
     name: '@tetherto/wdk-protocol-bridge-usdt0-evm',
     description: 'Cross-chain bridge protocol (USDT0)',
-    capabilities: ['Bridge USDT across chains', 'Cross-chain transfers']
+    capabilities: ['Bridge USDT across chains']
   },
   {
     name: '@tetherto/wdk-protocol-lending-aave-evm',
     description: 'DeFi lending protocol (Aave)',
-    capabilities: ['Supply assets to earn yield', 'Borrow against collateral', 'Manage lending positions']
+    capabilities: ['Supply assets to earn yield', 'Borrow against collateral']
   },
   {
     name: '@tetherto/wdk-protocol-fiat-moonpay',
     description: 'Fiat on/off-ramp (MoonPay)',
-    capabilities: ['Buy crypto with fiat (USD, EUR, etc.)', 'Sell crypto for fiat', 'Multiple payment methods']
+    capabilities: ['Buy crypto with fiat (USD, EUR, etc.)', 'Sell crypto for fiat']
   }
 ]
 

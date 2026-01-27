@@ -16,8 +16,8 @@ import { BRIDGE_TOOLS } from '../../src/tools/bridge/index.js'
 import { LENDING_TOOLS } from '../../src/tools/lending/index.js'
 import { FIAT_TOOLS } from '../../src/tools/fiat/index.js'
 
-const HAS_INDEXER = Boolean(process.env.WDK_INDEXER_API_KEY)
-const HAS_FIAT = Boolean(process.env.MOONPAY_API_KEY && process.env.MOONPAY_SECRET_KEY)
+const HAS_INDEXER = !!process.env.WDK_INDEXER_API_KEY
+const HAS_FIAT = process.env.MOONPAY_API_KEY && process.env.MOONPAY_SECRET_KEY
 
 async function main () {
   if (!process.env.WDK_SEED) {
