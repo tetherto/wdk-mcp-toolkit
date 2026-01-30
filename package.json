@@ -24,16 +24,16 @@
     "lint:fix": "standard --fix",
     "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest",
     "test:watch": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --watch",
-    "test:coverage": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --coverage"
+    "test:coverage": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --coverage",
+    "setup": "node bin/index.js setup"
+  },
+  "bin": {
+    "wdk-mcp-toolkit": "./bin/index.js"
   },
   "exports": {
     ".": {
       "types": "./types/index.d.ts",
-      "default": "./src/index.js"
-    },
-    "./tools/*": {
-      "types": "./types/tools/*.d.ts",
-      "default": "./src/tools/*.js"
+      "default": "./index.js"
     },
     "./package": {
       "default": "./package.json"
@@ -51,11 +51,13 @@
     ]
   },
   "dependencies": {
+    "@inquirer/prompts": "^7.0.0",
     "@modelcontextprotocol/sdk": "1.23.0",
     "@tetherto/wdk": "^1.0.0-beta.4",
     "@tetherto/wdk-indexer-http": "github:tetherto/wdk-indexer-http",
     "@tetherto/wdk-pricing-bitfinex-http": "^1.0.0-beta.1",
     "@tetherto/wdk-wallet": "^1.0.0-beta.6",
+    "picocolors": "^1.1.0",
     "zod": "^3.24.0"
   },
   "devDependencies": {

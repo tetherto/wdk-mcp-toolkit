@@ -27,7 +27,7 @@ This toolkit requires an MCP client that supports **tools**. For wallet write op
 | Feature | Required For |
 |---------|--------------|
 | Tools support | All operations (read and write) |
-| Elicitations support | Write operations (`sendTransaction`, `transfer`, `sign`) |
+| Elicitations support | Write operations (`sendTransaction`, `transfer`, `sign`, etc.) |
 
 See the [full list of MCP clients and their capabilities](https://modelcontextprotocol.io/clients).
 
@@ -60,10 +60,7 @@ Add `"type": "module"` to your `package.json` for ES module support:
 ### Creating a Basic MCP Server
 
 ```javascript
-import { WdkMcpServer } from '@tetherto/wdk-mcp-toolkit'
-import { walletTools } from '@tetherto/wdk-mcp-toolkit/tools/wallet'
-import { pricingTools } from '@tetherto/wdk-mcp-toolkit/tools/pricing'
-import { indexerTools } from '@tetherto/wdk-mcp-toolkit/tools/indexer'
+import { WdkMcpServer, WALLET_TOOLS, PRICING_TOOLS, INDEXER_TOOLS } from '@tetherto/wdk-mcp-toolkit'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import WalletManagerEvm from '@tetherto/wdk-wallet-evm'
 import WalletManagerBtc from '@tetherto/wdk-wallet-btc'
@@ -78,7 +75,7 @@ const server = new WdkMcpServer('my-wallet-server', '1.0.0')
   })
   .usePricing()
   .useIndexer({ apiKey: process.env.WDK_INDEXER_API_KEY })
-  .registerTools([...walletTools, ...pricingTools, ...indexerTools])
+  .registerTools([...WALLET_TOOLS, ...PRICING_TOOLS, ...INDEXER_TOOLS])
 
 const transport = new StdioServerTransport()
 await server.connect(transport)
@@ -121,7 +118,7 @@ server
     decimals: 6
   })
   .registerToken('ethereum', 'DAI', {
-    address: '0x6B175474E89094C44Da98b954EesE8Ff8cB6dB',
+    address: '0x6b175474e89094c44da98b954eedeac495271d0f',
     decimals: 18
   })
 
@@ -133,19 +130,19 @@ console.log('USDC address:', usdc.address)
 ### Using Read-Only vs Write Tools
 
 ```javascript
-import { walletReadTools, walletWriteTools } from '@tetherto/wdk-mcp-toolkit/tools/wallet'
+import { WALLET_READ_TOOLS, WALLET_WRITE_TOOLS } from '@tetherto/wdk-mcp-toolkit'
 
 // For read-only access (balance checks, address lookups, fee estimates)
 const readOnlyServer = new WdkMcpServer('read-only-server', '1.0.0')
   .useWdk({ seed: process.env.WDK_SEED })
   .registerWallet('ethereum', WalletManagerEvm, { provider: '...' })
-  .registerTools(walletReadTools)
+  .registerTools(WALLET_READ_TOOLS)
 
 // For full access (includes sendTransaction, transfer, sign)
 const fullAccessServer = new WdkMcpServer('full-access-server', '1.0.0')
   .useWdk({ seed: process.env.WDK_SEED })
   .registerWallet('ethereum', WalletManagerEvm, { provider: '...' })
-  .registerTools(walletWriteTools)
+  .registerTools(WALLET_WRITE_TOOLS)
 ```
 
 > **💡 Best Practice:** Register only the tools you need. Large tool sets increase context size, which can lead to slower responses, higher costs, and potential hallucinations where the AI invokes incorrect tools. If you only need to check balances, import and register just that tool:
@@ -162,7 +159,7 @@ const fullAccessServer = new WdkMcpServer('full-access-server', '1.0.0')
 |--------|---------|------------------|
 | `useWdk(config)` | Wallet operations | `server.wdk` |
 | `usePricing()` | Price data | `server.pricingClient` |
-| `useIndexer(config)` | Transaction history | `server.indexer.apiKey` |
+| `useIndexer(config)` | Transaction history | `server.indexerClient` |
 
 **How it works:**
 
@@ -171,12 +168,12 @@ const fullAccessServer = new WdkMcpServer('full-access-server', '1.0.0')
 const server = new WdkMcpServer('my-server', '1.0.0')
   .useWdk({ seed: process.env.WDK_SEED })      // server.wdk is now available
   .usePricing()                                 // server.pricingClient is now available
-  .useIndexer({ apiKey: process.env.API_KEY }) // server.indexer.apiKey is now available
+  .useIndexer({ apiKey: process.env.API_KEY }) // server.indexerClient is now available
 
 // 2. Register tools that use those capabilities
-server.registerTools(walletTools)   // These tools call server.wdk.*
-server.registerTools(pricingTools)  // These tools call server.pricingClient.*
-server.registerTools(indexerTools)  // These tools use server.indexer.apiKey
+server.registerTools(WALLET_TOOLS)   // These tools call server.wdk.*
+server.registerTools(PRICING_TOOLS)  // These tools call server.pricingClient.*
+server.registerTools(INDEXER_TOOLS)  // These tools call server.indexerClient.*
 ```
 
 **Writing custom tools:**
@@ -274,25 +271,45 @@ This pattern allows you to:
 
 If a tool requires a capability that wasn't enabled, it will fail at runtime. The built-in tools check for this:
 
-- `walletTools` require `useWdk()` and `registerWallet()`
-- `pricingTools` require `usePricing()`
-- `indexerTools` require `useIndexer()`
+- `WALLET_TOOLS` require `useWdk()` and `registerWallet()`
+- `PRICING_TOOLS` require `usePricing()`
+- `INDEXER_TOOLS` require `useIndexer()`
+- `SWAP_TOOLS` require `useWdk()` and `registerProtocol()` with a swap protocol
+- `BRIDGE_TOOLS` require `useWdk()` and `registerProtocol()` with a bridge protocol
+- `LENDING_TOOLS` require `useWdk()` and `registerProtocol()` with a lending protocol
+- `FIAT_TOOLS` require `useWdk()` and `registerProtocol()` with a fiat protocol
 
 ## 🖥️ Using with VS Code GitHub Copilot Chat
 
 You can use this MCP server with [VS Code GitHub Copilot Chat](https://code.visualstudio.com/docs/copilot/chat/mcp-servers).
 
-### Step 1: Clone the repository
+### Quick Setup (Recommended)
+
+The easiest way to get started is using the setup wizard:
 
 ```bash
-git clone https://github.com/AlibudaLab/wdk-mcp-toolkit.git
+git clone https://github.com/tetherto/wdk-mcp-toolkit.git
 cd wdk-mcp-toolkit
 npm install
+npm run setup
 ```
 
-### Step 2: Configure VS Code
+The wizard will guide you through:
 
-Create `.vscode/mcp.json` in the project root:
+1. **Seed phrase** (required) — Your BIP-39 wallet seed phrase
+2. **WDK Indexer API key** (optional) — For transaction history features ([get one here](https://wdk-api.tether.io/register))
+3. **MoonPay credentials** (optional) — For fiat on/off-ramp features ([MoonPay Dashboard](https://dashboard.moonpay.com/))
+
+After setup, the wizard will:
+- Install required dependencies automatically
+- Generate `.vscode/mcp.json` with your credentials
+- Open VS Code ready to start the server
+
+> **🔒 Security:** Your seed phrase is stored locally in `.vscode/mcp.json` which is gitignored. We recommend using a dedicated development wallet.
+
+### Manual Configuration
+
+If you prefer manual setup, create `.vscode/mcp.json` in the project root:
 
 ```json
 {
@@ -302,22 +319,32 @@ Create `.vscode/mcp.json` in the project root:
       "command": "node",
       "args": ["examples/basic/index.js"],
       "env": {
-        "WDK_SEED": "your wallet's seed phrase",
-        "WDK_INDEXER_API_KEY": "your indexer api key, you can obtain one here: https://docs.wallet.tether.io/tools/indexer-api/get-started"
+        "WDK_SEED": "your twelve word seed phrase here",
+        "WDK_INDEXER_API_KEY": "optional - get at https://wdk-api.tether.io/register",
+        "MOONPAY_API_KEY": "optional - get at https://dashboard.moonpay.com/",
+        "MOONPAY_SECRET_KEY": "optional - get at https://dashboard.moonpay.com/"
       }
     }
   }
 }
 ```
 
-Open the file in VS Code and click the **Start** button that appears above the server configuration.
+Then install the required dependencies:
 
-### Step 3: Use in Copilot Chat
+```bash
+npm install @tetherto/wdk-wallet-btc @tetherto/wdk-wallet-evm
+npm install @tetherto/wdk-protocol-swap-velora-evm @tetherto/wdk-protocol-bridge-usdt0-evm
+npm install @tetherto/wdk-protocol-lending-aave-evm @tetherto/wdk-protocol-fiat-moonpay
+```
 
-1. Open GitHub Copilot Chat in VS Code
-2. Select **Agent** mode from the dropdown
-3. Click the **Tools** button to verify your MCP server tools are available
-4. Start chatting:
+### Starting the Server
+
+1. Open `.vscode/mcp.json` in VS Code
+2. Click the **Start** button that appears above the server configuration
+3. Open GitHub Copilot Chat and select **Agent** mode
+4. Click **Tools** to verify the MCP server tools are available
+
+### Example Conversations
 
 ```
 You: What's my ethereum address?
@@ -329,14 +356,23 @@ Copilot: Your ETH balance is 1.5 ETH
 You: What's the current price of BTC?
 Copilot: The current price of BTC is $98,450.00 USD
 
-You: How much USDT do I have on ethereum?
-Copilot: Your USDT balance on Ethereum is 1,000.00 USDT
-
 You: Send 1 USDT to vitalik.eth
-Copilot: I'll transfer 1 USDT to vitalik.eth (0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045).
+Copilot: I'll transfer 1 USDT to vitalik.eth.
          [Requests approval via elicitation]
          Transaction sent! Hash: 0xabc123...
 ```
+
+### Optional Capabilities
+
+The server conditionally enables capabilities based on which environment variables are set:
+
+| Capability | Environment Variables | Tools |
+|------------|----------------------|-------|
+| Wallet, Pricing, Swap, Bridge, Lending | `WDK_SEED` (required) | Always enabled |
+| Transaction History | `WDK_INDEXER_API_KEY` | `INDEXER_TOOLS` |
+| Fiat On/Off-Ramp | `MOONPAY_API_KEY` + `MOONPAY_SECRET_KEY` | `FIAT_TOOLS` |
+
+Re-run `npm run setup` to change your configuration or enable additional capabilities.
 
 ## 📚 API Reference
 
@@ -375,8 +411,17 @@ const server = new WdkMcpServer('my-wallet-server', '1.0.0')
 |--------|-------------|---------|
 | `useWdk(config)` | Initializes the WDK with a seed phrase | `WdkMcpServer` |
 | `registerWallet(blockchain, WalletManager, config)` | Registers a wallet for a blockchain | `WdkMcpServer` |
-| `useIndexer(config)` | Enables the WDK Indexer for transaction history | `WdkMcpServer` |
+| `useIndexer(config)` | Enables the WDK Indexer client for transaction history | `WdkMcpServer` |
 | `usePricing()` | Enables the Bitfinex pricing client | `WdkMcpServer` |
+| `registerProtocol(chain, label, Protocol, config)` | Registers a DeFi protocol (swap, bridge, lending, fiat) | `WdkMcpServer` |
+| `getSwapChains()` | Returns chains with swap protocols registered | `string[]` |
+| `getSwapProtocols(chain)` | Returns swap protocol labels for a chain | `string[]` |
+| `getBridgeChains()` | Returns chains with bridge protocols registered | `string[]` |
+| `getBridgeProtocols(chain)` | Returns bridge protocol labels for a chain | `string[]` |
+| `getLendingChains()` | Returns chains with lending protocols registered | `string[]` |
+| `getLendingProtocols(chain)` | Returns lending protocol labels for a chain | `string[]` |
+| `getFiatChains()` | Returns chains with fiat protocols registered | `string[]` |
+| `getFiatProtocols(chain)` | Returns fiat protocol labels for a chain | `string[]` |
 | `registerToken(chain, symbol, token)` | Registers a token address mapping | `WdkMcpServer` |
 | `getTokenInfo(chain, symbol)` | Returns token info for a symbol | `TokenInfo \| undefined` |
 | `getRegisteredTokens(chain)` | Returns all registered token symbols | `string[]` |
@@ -436,9 +481,55 @@ server.registerWallet('bitcoin', WalletManagerBtc, {
 })
 ```
 
+#### registerProtocol(chain, label, Protocol, config)
+
+Registers a DeFi protocol for a blockchain. Protocols enable swap, bridge, lending, and fiat on/off-ramp functionality. The protocol type is automatically detected from the class inheritance.
+
+**Parameters:**
+
+- `chain` (string): The blockchain name (e.g., "ethereum")
+- `label` (string): The protocol label (e.g., "velora", "aave", "moonpay")
+- `Protocol` (class): The protocol class (must extend SwapProtocol, BridgeProtocol, LendingProtocol, or FiatProtocol)
+- `config` (object, optional): Protocol-specific configuration
+
+**Returns:** `WdkMcpServer` - The server instance for chaining
+
+**Throws:** `Error` - If `useWdk()` has not been called, or if unknown protocol type
+
+**Example:**
+
+```javascript
+import VeloraProtocolEvm from '@tetherto/wdk-protocol-swap-velora-evm'
+import Usdt0ProtocolEvm from '@tetherto/wdk-protocol-bridge-usdt0-evm'
+import AaveProtocolEvm from '@tetherto/wdk-protocol-lending-aave-evm'
+import MoonPayProtocol from '@tetherto/wdk-protocol-fiat-moonpay'
+
+server
+  // Swap protocol - enables token swaps
+  .registerProtocol('ethereum', 'velora', VeloraProtocolEvm)
+
+  // Bridge protocol - enables cross-chain transfers
+  .registerProtocol('ethereum', 'usdt0', Usdt0ProtocolEvm)
+
+  // Lending protocol - enables supply, borrow, withdraw, repay
+  .registerProtocol('ethereum', 'aave', AaveProtocolEvm)
+
+  // Fiat protocol - enables buy/sell crypto with fiat
+  .registerProtocol('ethereum', 'moonpay', MoonPayProtocol, {
+    secretKey: process.env.MOONPAY_SECRET_KEY,
+    apiKey: process.env.MOONPAY_API_KEY
+  })
+```
+
+**Learn more about protocols:**
+- [Swap Modules](https://docs.wallet.tether.io/sdk/swap-modules)
+- [Bridge Modules](https://docs.wallet.tether.io/sdk/bridge-modules)
+- [Lending Modules](https://docs.wallet.tether.io/sdk/lending-modules)
+- [Fiat Modules](https://docs.wallet.tether.io/sdk/fiat-modules)
+
 #### useIndexer(config)
 
-Enables transaction history capabilities by storing the Indexer API key. After calling this, `server.indexer.apiKey` becomes available for tools to use when querying the WDK Indexer API.
+Enables transaction history capabilities by initializing the WDK Indexer client. After calling this, `server.indexerClient` becomes available for tools to use.
 
 **Parameters:**
 
@@ -454,10 +545,9 @@ Enables transaction history capabilities by storing the Indexer API key. After c
 ```javascript
 server.useIndexer({ apiKey: process.env.WDK_INDEXER_API_KEY })
 
-// Now tools can access server.indexer.apiKey
-const response = await fetch(url, {
-  headers: { 'x-api-key': server.indexer.apiKey }
-})
+// Now tools can access server.indexerClient
+const transfers = await server.indexerClient.getTokenTransfers('ethereum', 'usdt', address)
+const balance = await server.indexerClient.getTokenBalance('ethereum', 'usdt', address)
 ```
 
 #### usePricing()
@@ -559,15 +649,14 @@ Utility method for bulk tool registration. This is a convenience wrapper we adde
 **Example:**
 
 ```javascript
-import { walletTools } from '@tetherto/wdk-mcp-toolkit/tools/wallet'
-import { pricingTools } from '@tetherto/wdk-mcp-toolkit/tools/pricing'
+import { WALLET_TOOLS, PRICING_TOOLS } from '@tetherto/wdk-mcp-toolkit'
 
 // Register built-in tool arrays
-server.registerTools([...walletTools, ...pricingTools])
+server.registerTools([...WALLET_TOOLS, ...PRICING_TOOLS])
 
 // Or mix with custom tools
 server.registerTools([
-  ...walletTools,
+  ...WALLET_TOOLS,
   myCustomTool,
   anotherCustomTool
 ])
@@ -656,12 +745,60 @@ Pre-configured USDT token addresses for common chains. These are automatically r
 | `getTokenTransfers` | Get token transfer history for an address |
 | `getIndexerTokenBalance` | Get token balance via indexer API |
 
+### Swap Tools
+
+Enable token swaps through registered swap protocols (e.g., Velora). See [Swap Modules](https://docs.wallet.tether.io/sdk/swap-modules) for available protocols.
+
+| Tool | Category | Description |
+|------|----------|-------------|
+| `quoteSwap` | Read | Get a quote for swapping tokens |
+| `swap` | Write | Execute a token swap |
+
+### Bridge Tools
+
+Enable cross-chain token transfers through registered bridge protocols (e.g., USDT0). See [Bridge Modules](https://docs.wallet.tether.io/sdk/bridge-modules) for available protocols.
+
+| Tool | Category | Description |
+|------|----------|-------------|
+| `quoteBridge` | Read | Get a quote for bridging tokens |
+| `bridge` | Write | Execute a cross-chain bridge transfer |
+
+### Lending Tools
+
+Enable DeFi lending operations through registered lending protocols (e.g., Aave). See [Lending Modules](https://docs.wallet.tether.io/sdk/lending-modules) for available protocols.
+
+| Tool | Category | Description |
+|------|----------|-------------|
+| `quoteSupply` | Read | Get a quote for supplying tokens |
+| `supply` | Write | Supply tokens to a lending protocol |
+| `quoteWithdraw` | Read | Get a quote for withdrawing tokens |
+| `withdraw` | Write | Withdraw tokens from a lending protocol |
+| `quoteBorrow` | Read | Get a quote for borrowing tokens |
+| `borrow` | Write | Borrow tokens from a lending protocol |
+| `quoteRepay` | Read | Get a quote for repaying borrowed tokens |
+| `repay` | Write | Repay borrowed tokens |
+
+### Fiat Tools
+
+Enable fiat on/off-ramp operations through registered fiat protocols (e.g., MoonPay). See [Fiat Modules](https://docs.wallet.tether.io/sdk/fiat-modules) for available protocols.
+
+| Tool | Category | Description |
+|------|----------|-------------|
+| `quoteBuy` | Read | Get a quote for buying crypto with fiat |
+| `buy` | Write | Execute a fiat-to-crypto purchase |
+| `quoteSell` | Read | Get a quote for selling crypto for fiat |
+| `sell` | Write | Execute a crypto-to-fiat sale |
+| `getTransactionDetail` | Read | Get details of a fiat transaction |
+| `getSupportedCryptoAssets` | Read | Get list of supported cryptocurrencies |
+| `getSupportedFiatCurrencies` | Read | Get list of supported fiat currencies |
+| `getSupportedCountries` | Read | Get list of supported countries |
+
 ## 🔒 Security Considerations
 
 - **Seed Phrase Security**: Always store your seed phrase securely and never share it. Use environment variables (`WDK_SEED`) instead of hardcoding.
 - **API Key Security**: Store API keys in environment variables, never in source code.
 - **Memory Cleanup**: The `close()` method automatically calls `dispose()` on the WDK instance to clear private keys from memory.
-- **Read vs Write Tools**: Use `walletReadTools` for read-only access when write operations are not needed.
+- **Read vs Write Tools**: Use `WALLET_READ_TOOLS` for read-only access when write operations are not needed.
 - **Elicitations for Write Operations**: For maximum safety, use an MCP client that supports elicitations (like VS Code GitHub Copilot or Cursor) for write operations to ensure human approval before transactions execute.
 - **MCP Transport Security**: Use secure transports (stdio, SSE with TLS) in production environments.
 - **Tool Annotations**: All tools include proper `readOnlyHint` and `destructiveHint` annotations for MCP clients.
@@ -696,6 +833,8 @@ npm run test:coverage
 ```
 src/
 ├── server.js              # WdkMcpServer class, CHAINS, DEFAULT_TOKENS
+├── utils/                 # Utility functions
+│   └── amount.js          # Amount parsing and formatting
 └── tools/
     ├── wallet/            # Wallet operation tools
     │   ├── index.js       # Tool exports
@@ -714,11 +853,38 @@ src/
     │   ├── index.js
     │   ├── getCurrentPrice.js
     │   └── getHistoricalPrice.js
-    └── indexer/           # Transaction history tools
+    ├── indexer/           # Transaction history tools
+    │   ├── index.js
+    │   ├── getTokenTransfers.js
+    │   └── getTokenBalance.js
+    ├── swap/              # Token swap tools
+    │   ├── index.js
+    │   ├── quoteSwap.js
+    │   └── swap.js
+    ├── bridge/            # Cross-chain bridge tools
+    │   ├── index.js
+    │   ├── quoteBridge.js
+    │   └── bridge.js
+    ├── lending/           # DeFi lending tools
+    │   ├── index.js
+    │   ├── quoteSupply.js
+    │   ├── supply.js
+    │   ├── quoteWithdraw.js
+    │   ├── withdraw.js
+    │   ├── quoteBorrow.js
+    │   ├── borrow.js
+    │   ├── quoteRepay.js
+    │   └── repay.js
+    └── fiat/              # Fiat on/off-ramp tools
         ├── index.js
-        ├── constants.js
-        ├── getTokenTransfers.js
-        └── getTokenBalance.js
+        ├── quoteBuy.js
+        ├── buy.js
+        ├── quoteSell.js
+        ├── sell.js
+        ├── getTransactionDetail.js
+        ├── getSupportedCryptoAssets.js
+        ├── getSupportedFiatCurrencies.js
+        └── getSupportedCountries.js
 ```
 
 ## 📜 License
@@ -737,6 +903,6 @@ For support, please open an issue on the GitHub repository.
 
 - **WDK Documentation**: [docs.wallet.tether.io](https://docs.wallet.tether.io)
 - **MCP SDK**: [github.com/modelcontextprotocol/typescript-sdk](https://github.com/modelcontextprotocol/typescript-sdk)
-- **MCP Specification**: [spec.modelcontextprotocol.io](https://spec.modelcontextprotocol.io)
+- **MCP Specification**: [modelcontextprotocol.io/specification/2025-11-25](https://modelcontextprotocol.io/specification/2025-11-25)
 - **MCP Clients**: [modelcontextprotocol.io/clients](https://modelcontextprotocol.io/clients)
 - **VS Code Copilot MCP**: [Using MCP servers in VS Code](https://code.visualstudio.com/docs/copilot/chat/mcp-servers)
