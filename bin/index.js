@@ -15,6 +15,9 @@
 'use strict'
 
 import pc from 'picocolors'
+import { createRequire } from 'node:module'
+const require = createRequire(import.meta.url)
+const pkg = require('../package.json')
 
 const COMMANDS = {
   setup: {
@@ -28,6 +31,12 @@ const COMMANDS = {
     description: 'Show this help message',
     handler: async () => {
       printHelp()
+    }
+  },
+  version: {
+    description: 'Show the current version',
+    handler: async () => {
+      console.log(pkg.version)
     }
   }
 }
