@@ -1,5 +1,8 @@
 # @tetherto/wdk-mcp-toolkit
 
+
+https://github.com/user-attachments/assets/9fc1aa65-b76b-4569-bac0-42f75ccdc1ce
+
 > **Note:** This package is currently in beta. Please test thoroughly in development environments before using in production.
 
 A simple and secure package to expose WDK (Wallet Development Kit) functionality through the Model Context Protocol (MCP). This package provides a clean API for creating MCP servers that enable AI agents to interact with cryptocurrency wallets across multiple blockchains.
