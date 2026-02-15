@@ -18,9 +18,7 @@ describe('transfer', () => {
       wdk: {
         getAccount: jest.fn()
       },
-      server: {
-        elicitInput: jest.fn()
-      }
+      requestConfirmation: jest.fn()
     }
   })
 
@@ -55,7 +53,7 @@ describe('transfer', () => {
           transfer: jest.fn()
         }
         server.wdk.getAccount.mockResolvedValue(accountMock)
-        server.server.elicitInput.mockResolvedValue({ action: 'decline' })
+        server.requestConfirmation.mockResolvedValue({ action: 'decline' })
 
         await handler({
           chain: 'ethereum',
@@ -149,7 +147,7 @@ describe('transfer', () => {
           transfer: jest.fn()
         }
         server.wdk.getAccount.mockResolvedValue(accountMock)
-        server.server.elicitInput.mockResolvedValue({ action: 'decline' })
+        server.requestConfirmation.mockResolvedValue({ action: 'decline' })
 
         await handler({
           chain: 'ethereum',
@@ -176,7 +174,7 @@ describe('transfer', () => {
           transfer: jest.fn()
         }
         server.wdk.getAccount.mockResolvedValue(accountMock)
-        server.server.elicitInput.mockResolvedValue({ action: 'decline' })
+        server.requestConfirmation.mockResolvedValue({ action: 'decline' })
 
         await handler({
           chain: 'ethereum',
@@ -194,7 +192,7 @@ describe('transfer', () => {
     })
 
     describe('confirmation flow', () => {
-      test('should call server.server.elicitInput with transfer details', async () => {
+      test('should call server.requestConfirmation with transfer details', async () => {
         server.getTokenInfo.mockReturnValue(USDT_INFO)
 
         const quoteTransferMock = jest.fn().mockResolvedValue({ fee: 21000000000000n })
@@ -203,7 +201,7 @@ describe('transfer', () => {
           transfer: jest.fn()
         }
         server.wdk.getAccount.mockResolvedValue(accountMock)
-        server.server.elicitInput.mockResolvedValue({ action: 'decline' })
+        server.requestConfirmation.mockResolvedValue({ action: 'decline' })
 
         await handler({
           chain: 'ethereum',
@@ -212,10 +210,9 @@ describe('transfer', () => {
           amount: '100'
         })
 
-        expect(server.server.elicitInput).toHaveBeenCalledWith(
-          expect.objectContaining({
-            message: expect.stringContaining('TOKEN TRANSFER CONFIRMATION REQUIRED')
-          })
+        expect(server.requestConfirmation).toHaveBeenCalledWith(
+          expect.stringContaining('TOKEN TRANSFER CONFIRMATION REQUIRED'),
+          expect.any(Object)
         )
       })
 
@@ -228,7 +225,7 @@ describe('transfer', () => {
           transfer: jest.fn()
         }
         server.wdk.getAccount.mockResolvedValue(accountMock)
-        server.server.elicitInput.mockResolvedValue({ action: 'accept', content: { confirmed: false } })
+        server.requestConfirmation.mockResolvedValue({ action: 'accept', content: { confirmed: false } })
 
         const result = await handler({
           chain: 'ethereum',
@@ -249,7 +246,7 @@ describe('transfer', () => {
           transfer: jest.fn()
         }
         server.wdk.getAccount.mockResolvedValue(accountMock)
-        server.server.elicitInput.mockResolvedValue({ action: 'decline' })
+        server.requestConfirmation.mockResolvedValue({ action: 'decline' })
 
         const result = await handler({
           chain: 'ethereum',
@@ -275,7 +272,7 @@ describe('transfer', () => {
           transfer: transferMock
         }
         server.wdk.getAccount.mockResolvedValue(accountMock)
-        server.server.elicitInput.mockResolvedValue({ action: 'accept', content: { confirmed: true } })
+        server.requestConfirmation.mockResolvedValue({ action: 'accept', content: { confirmed: true } })
 
         await handler({
           chain: 'ethereum',
@@ -299,7 +296,7 @@ describe('transfer', () => {
           transfer: transferMock
         }
         server.wdk.getAccount.mockResolvedValue(accountMock)
-        server.server.elicitInput.mockResolvedValue({ action: 'accept', content: { confirmed: true } })
+        server.requestConfirmation.mockResolvedValue({ action: 'accept', content: { confirmed: true } })
 
         const result = await handler({
           chain: 'ethereum',
@@ -323,7 +320,7 @@ describe('transfer', () => {
           transfer: transferMock
         }
         server.wdk.getAccount.mockResolvedValue(accountMock)
-        server.server.elicitInput.mockResolvedValue({ action: 'accept', content: { confirmed: true } })
+        server.requestConfirmation.mockResolvedValue({ action: 'accept', content: { confirmed: true } })
 
         const result = await handler({
           chain: 'ethereum',

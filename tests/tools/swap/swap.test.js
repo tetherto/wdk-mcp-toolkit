@@ -18,9 +18,7 @@ describe('swap', () => {
       wdk: {
         getAccount: jest.fn()
       },
-      server: {
-        elicitInput: jest.fn()
-      }
+      requestConfirmation: jest.fn()
     }
   })
 
@@ -121,7 +119,7 @@ describe('swap', () => {
           .mockReturnValueOnce(USDT_INFO)
           .mockReturnValueOnce(USDC_INFO)
         server.wdk.getAccount.mockResolvedValue(accountMock)
-        server.server.elicitInput.mockResolvedValue({ action: 'decline' })
+        server.requestConfirmation.mockResolvedValue({ action: 'decline' })
 
         await handler({
           chain: 'ethereum',
@@ -156,7 +154,7 @@ describe('swap', () => {
           .mockReturnValueOnce(USDT_INFO)
           .mockReturnValueOnce(USDC_INFO)
         server.wdk.getAccount.mockResolvedValue(accountMock)
-        server.server.elicitInput.mockResolvedValue({ action: 'decline' })
+        server.requestConfirmation.mockResolvedValue({ action: 'decline' })
 
         await handler({
           chain: 'ethereum',
@@ -193,7 +191,7 @@ describe('swap', () => {
           .mockReturnValueOnce(USDT_INFO)
           .mockReturnValueOnce(USDC_INFO)
         server.wdk.getAccount.mockResolvedValue(accountMock)
-        server.server.elicitInput.mockResolvedValue({ action: 'decline' })
+        server.requestConfirmation.mockResolvedValue({ action: 'decline' })
 
         await handler({
           chain: 'ethereum',
@@ -233,7 +231,7 @@ describe('swap', () => {
           .mockReturnValueOnce(USDT_INFO)
           .mockReturnValueOnce(USDC_INFO)
         server.wdk.getAccount.mockResolvedValue(accountMock)
-        server.server.elicitInput.mockResolvedValue({ action: 'accept', content: { confirmed: true } })
+        server.requestConfirmation.mockResolvedValue({ action: 'accept', content: { confirmed: true } })
 
         const recipient = '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb7'
 
@@ -253,7 +251,7 @@ describe('swap', () => {
     })
 
     describe('confirmation flow', () => {
-      test('should call server.server.elicitInput with confirmation message', async () => {
+      test('should call server.requestConfirmation with confirmation message', async () => {
         const quoteSwapMock = jest.fn().mockResolvedValue({
           tokenInAmount: 100000000n,
           tokenOutAmount: 99850000n,
@@ -271,7 +269,7 @@ describe('swap', () => {
           .mockReturnValueOnce(USDT_INFO)
           .mockReturnValueOnce(USDC_INFO)
         server.wdk.getAccount.mockResolvedValue(accountMock)
-        server.server.elicitInput.mockResolvedValue({ action: 'decline' })
+        server.requestConfirmation.mockResolvedValue({ action: 'decline' })
 
         await handler({
           chain: 'ethereum',
@@ -281,10 +279,9 @@ describe('swap', () => {
           side: 'sell'
         })
 
-        expect(server.server.elicitInput).toHaveBeenCalledWith(
-          expect.objectContaining({
-            message: expect.stringContaining('SWAP CONFIRMATION REQUIRED')
-          })
+        expect(server.requestConfirmation).toHaveBeenCalledWith(
+          expect.stringContaining('SWAP CONFIRMATION REQUIRED'),
+          expect.any(Object)
         )
       })
 
@@ -306,7 +303,7 @@ describe('swap', () => {
           .mockReturnValueOnce(USDT_INFO)
           .mockReturnValueOnce(USDC_INFO)
         server.wdk.getAccount.mockResolvedValue(accountMock)
-        server.server.elicitInput.mockResolvedValue({ action: 'accept', content: { confirmed: false } })
+        server.requestConfirmation.mockResolvedValue({ action: 'accept', content: { confirmed: false } })
 
         const result = await handler({
           chain: 'ethereum',
@@ -337,7 +334,7 @@ describe('swap', () => {
           .mockReturnValueOnce(USDT_INFO)
           .mockReturnValueOnce(USDC_INFO)
         server.wdk.getAccount.mockResolvedValue(accountMock)
-        server.server.elicitInput.mockResolvedValue({ action: 'decline' })
+        server.requestConfirmation.mockResolvedValue({ action: 'decline' })
 
         const result = await handler({
           chain: 'ethereum',
@@ -377,7 +374,7 @@ describe('swap', () => {
           .mockReturnValueOnce(USDT_INFO)
           .mockReturnValueOnce(USDC_INFO)
         server.wdk.getAccount.mockResolvedValue(accountMock)
-        server.server.elicitInput.mockResolvedValue({ action: 'accept', content: { confirmed: true } })
+        server.requestConfirmation.mockResolvedValue({ action: 'accept', content: { confirmed: true } })
 
         await handler({
           chain: 'ethereum',
@@ -415,7 +412,7 @@ describe('swap', () => {
           .mockReturnValueOnce(USDT_INFO)
           .mockReturnValueOnce(USDC_INFO)
         server.wdk.getAccount.mockResolvedValue(accountMock)
-        server.server.elicitInput.mockResolvedValue({ action: 'accept', content: { confirmed: true } })
+        server.requestConfirmation.mockResolvedValue({ action: 'accept', content: { confirmed: true } })
 
         const result = await handler({
           chain: 'ethereum',
@@ -453,7 +450,7 @@ describe('swap', () => {
           .mockReturnValueOnce(USDT_INFO)
           .mockReturnValueOnce(USDC_INFO)
         server.wdk.getAccount.mockResolvedValue(accountMock)
-        server.server.elicitInput.mockResolvedValue({ action: 'accept', content: { confirmed: true } })
+        server.requestConfirmation.mockResolvedValue({ action: 'accept', content: { confirmed: true } })
 
         const result = await handler({
           chain: 'ethereum',

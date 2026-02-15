@@ -22,12 +22,12 @@ For detailed documentation about the complete WDK ecosystem, visit [docs.wallet.
 
 ### MCP Client Compatibility
 
-This toolkit requires an MCP client that supports **tools**. For wallet write operations (sending transactions, signing messages), a client that also supports **elicitations** is required to enable human approval flows before executing sensitive operations.
+This toolkit requires an MCP client that supports **tools**. For wallet write operations (sending transactions, signing messages), a client that also supports **elicitations** is recommended to enable human approval flows before executing sensitive operations. If your MCP client does not support elicitations, you can disable them via the `capabilities` constructor option (see [Client Capabilities](#client-capabilities)).
 
 | Feature | Required For |
 |---------|--------------|
 | Tools support | All operations (read and write) |
-| Elicitations support | Write operations (`sendTransaction`, `transfer`, `sign`) |
+| Elicitations support | Write operations (`sendTransaction`, `transfer`, `sign`) — can be disabled |
 
 See the [full list of MCP clients and their capabilities](https://modelcontextprotocol.io/clients).
 
@@ -355,19 +355,54 @@ The main class for creating MCP servers with WDK wallet functionality. Extends `
 #### Constructor
 
 ```javascript
-new WdkMcpServer(name, version)
+new WdkMcpServer(name, version, options?)
 ```
 
 **Parameters:**
 
 - `name` (string): The server name
 - `version` (string): The server version
+- `options` (object, optional): Server configuration options
+  - `capabilities` (object, optional): MCP client capabilities
+    - `elicitation` (boolean, optional): Whether the MCP client supports elicitation. Defaults to `true`.
 
 **Example:**
 
 ```javascript
+// Default — elicitation enabled
 const server = new WdkMcpServer('my-wallet-server', '1.0.0')
+
+// Disable elicitation for clients that don't support it
+const server = new WdkMcpServer('my-wallet-server', '1.0.0', {
+  capabilities: { elicitation: false }
+})
 ```
+
+#### Client Capabilities
+
+MCP clients have varying feature support. The `capabilities` constructor option lets you declare which features your MCP client supports, so the server adapts its behavior accordingly.
+
+| Capability | Default | Effect When Disabled |
+|------------|---------|---------------------|
+| `elicitation` | `true` | Write tools skip confirmation dialogs and execute immediately |
+
+When `elicitation` is set to `false`, destructive operations (`transfer`, `sendTransaction`, `swap`, `bridge`, `supply`, `withdraw`, `borrow`, `repay`) will execute without presenting a confirmation dialog to the user. Use this when your MCP client does not support the elicitation feature, or when you want to build automated workflows that don't require human-in-the-loop confirmation.
+
+```javascript
+// For MCP clients that support elicitation (default)
+const server = new WdkMcpServer('my-server', '1.0.0')
+
+// For MCP clients that do NOT support elicitation
+const server = new WdkMcpServer('my-server', '1.0.0', {
+  capabilities: { elicitation: false }
+})
+
+// Access capabilities at runtime
+console.log(server.capabilities)
+// { elicitation: true }
+```
+
+> **Security Note:** Disabling elicitation removes the human approval step for write operations. Ensure your application has appropriate safeguards when running without elicitation.
 
 #### Methods
 
@@ -382,6 +417,7 @@ const server = new WdkMcpServer('my-wallet-server', '1.0.0')
 | `getRegisteredTokens(chain)` | Returns all registered token symbols | `string[]` |
 | `getChains()` | Returns all registered blockchain names | `string[]` |
 | `registerTools(tools)` | Bulk registers tools from an array of functions | `WdkMcpServer` |
+| `requestConfirmation(message, schema)` | Requests user confirmation or auto-confirms based on capabilities | `Promise<object>` |
 | `close()` | Closes the server and disposes WDK securely | `Promise<void>` |
 
 #### useWdk(config)
@@ -662,7 +698,7 @@ Pre-configured USDT token addresses for common chains. These are automatically r
 - **API Key Security**: Store API keys in environment variables, never in source code.
 - **Memory Cleanup**: The `close()` method automatically calls `dispose()` on the WDK instance to clear private keys from memory.
 - **Read vs Write Tools**: Use `walletReadTools` for read-only access when write operations are not needed.
-- **Elicitations for Write Operations**: For maximum safety, use an MCP client that supports elicitations (like VS Code GitHub Copilot or Cursor) for write operations to ensure human approval before transactions execute.
+- **Elicitations for Write Operations**: For maximum safety, use an MCP client that supports elicitations (like VS Code GitHub Copilot or Cursor) for write operations to ensure human approval before transactions execute. If your client does not support elicitations, you can disable them with `{ capabilities: { elicitation: false } }` — but ensure your application has appropriate safeguards.
 - **MCP Transport Security**: Use secure transports (stdio, SSE with TLS) in production environments.
 - **Tool Annotations**: All tools include proper `readOnlyHint` and `destructiveHint` annotations for MCP clients.
 

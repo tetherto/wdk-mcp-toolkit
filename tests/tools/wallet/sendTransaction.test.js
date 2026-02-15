@@ -16,9 +16,7 @@ describe('sendTransaction', () => {
       wdk: {
         getAccount: jest.fn()
       },
-      server: {
-        elicitInput: jest.fn()
-      }
+      requestConfirmation: jest.fn()
     }
   })
 
@@ -30,7 +28,7 @@ describe('sendTransaction', () => {
       sendTransaction: sendTransactionMock
     }
     server.wdk.getAccount.mockResolvedValue(accountMock)
-    server.server.elicitInput.mockResolvedValue(overrides.elicit ?? { action: 'accept', content: { confirmed: true } })
+    server.requestConfirmation.mockResolvedValue(overrides.elicit ?? { action: 'accept', content: { confirmed: true } })
     return { quoteSendTransactionMock, sendTransactionMock, accountMock }
   }
 
@@ -132,13 +130,12 @@ describe('sendTransaction', () => {
           value: '100000'
         })
 
-        expect(server.server.elicitInput).toHaveBeenCalledWith(
-          expect.objectContaining({
-            message: expect.stringContaining('TRANSACTION CONFIRMATION')
-          })
+        expect(server.requestConfirmation).toHaveBeenCalledWith(
+          expect.stringContaining('TRANSACTION CONFIRMATION'),
+          expect.any(Object)
         )
-        expect(server.server.elicitInput.mock.calls[0][0].message).toContain('100000')
-        expect(server.server.elicitInput.mock.calls[0][0].message).toContain('bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh')
+        expect(server.requestConfirmation.mock.calls[0][0]).toContain('100000')
+        expect(server.requestConfirmation.mock.calls[0][0]).toContain('bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh')
       })
 
       test('should return cancelled message if user declines', async () => {
