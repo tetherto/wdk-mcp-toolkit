@@ -144,19 +144,16 @@ This transaction is IRREVERSIBLE once broadcast.
 
 Do you want to proceed with this borrow?`
 
-        const confirmation = await server.server.elicitInput({
-          message: confirmationMessage,
-          requestedSchema: {
-            type: 'object',
-            properties: {
-              confirmed: {
-                type: 'boolean',
-                title: 'Confirm Borrow',
-                description: 'Check to confirm and execute borrow'
-              }
-            },
-            required: ['confirmed']
-          }
+        const confirmation = await server.requestConfirmation(confirmationMessage, {
+          type: 'object',
+          properties: {
+            confirmed: {
+              type: 'boolean',
+              title: 'Confirm Borrow',
+              description: 'Check to confirm and execute borrow'
+            }
+          },
+          required: ['confirmed']
         })
 
         if (confirmation.action !== 'accept' || !confirmation.content?.confirmed) {

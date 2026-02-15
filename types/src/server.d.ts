@@ -31,7 +31,7 @@ export class WdkMcpServer extends McpServer {
      * @param {string} name - The server name.
      * @param {string} version - The server version.
      */
-    constructor(name: string, version: string);
+    constructor(name: string, version: string, options?: ServerOptions);
     /**
      * The Wallet Development Kit instance for blockchain operations.
      *
@@ -75,6 +75,13 @@ export class WdkMcpServer extends McpServer {
      */
     private _protocols;
     /**
+     * MCP client capabilities configuration.
+     *
+     * @private
+     * @type {Capabilities}
+     */
+    private _capabilities;
+    /**
      * The WDK instance.
      *
      * @type {WDK | null}
@@ -92,6 +99,28 @@ export class WdkMcpServer extends McpServer {
      * @type {BitfinexPricingClient | null}
      */
     get pricingClient(): BitfinexPricingClient | null;
+    /**
+     * The MCP client capabilities.
+     *
+     * @type {Capabilities}
+     */
+    get capabilities(): Capabilities;
+    /**
+     * Requests user confirmation for a destructive operation.
+     *
+     * If elicitation is enabled, presents a confirmation dialog via the MCP client.
+     * If elicitation is disabled, auto-confirms the operation.
+     *
+     * @param {string} message - The confirmation message to display.
+     * @param {object} schema - The JSON Schema for the confirmation form.
+     * @returns {Promise<{action: string, content?: {confirmed?: boolean}}>} The confirmation result.
+     */
+    requestConfirmation(message: string, schema: object): Promise<{
+        action: string;
+        content?: {
+            confirmed?: boolean;
+        };
+    }>;
     /**
      * Enables WDK and initializes the wallet development kit.
      *
@@ -267,6 +296,18 @@ export type ProtocolRegistry = {
 export type TokenMap = Map<string, TokenInfo>;
 export type TokenRegistry = Map<string, TokenMap>;
 export type ToolFunction = (server: WdkMcpServer) => void;
+export type Capabilities = {
+    /**
+     * - Whether the MCP client supports elicitation. Defaults to true.
+     */
+    elicitation?: boolean;
+};
+export type ServerOptions = {
+    /**
+     * - MCP client capabilities.
+     */
+    capabilities?: Capabilities;
+};
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import WDK from '@tetherto/wdk';
 import { WdkIndexerClient } from '@tetherto/wdk-indexer-http';

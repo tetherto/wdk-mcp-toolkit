@@ -34,6 +34,16 @@ import { WdkIndexerClient } from '@tetherto/wdk-indexer-http'
  */
 
 /**
+ * @typedef {Object} Capabilities
+ * @property {boolean} [elicitation] - Whether the MCP client supports elicitation. Defaults to true.
+ */
+
+/**
+ * @typedef {Object} ServerOptions
+ * @property {Capabilities} [capabilities] - MCP client capabilities.
+ */
+
+/**
  * @typedef {Object} ProtocolRegistry
  * @property {Map<string, Set<string>>} swap - Chain to labels mapping for swap protocols.
  * @property {Map<string, Set<string>>} bridge - Chain to labels mapping for bridge protocols.
@@ -118,8 +128,9 @@ export class WdkMcpServer extends McpServer {
    *
    * @param {string} name - The server name.
    * @param {string} version - The server version.
+   * @param {ServerOptions} [options] - Server options including MCP client capabilities.
    */
-  constructor (name, version) {
+  constructor (name, version, options = {}) {
     super({ name, version })
 
     /**
@@ -174,6 +185,17 @@ export class WdkMcpServer extends McpServer {
       lending: new Map(),
       fiat: new Map()
     }
+
+    /**
+     * MCP client capabilities configuration.
+     *
+     * @private
+     * @type {Capabilities}
+     */
+    this._capabilities = {
+      elicitation: true,
+      ...options.capabilities
+    }
   }
 
   /**
@@ -210,6 +232,36 @@ export class WdkMcpServer extends McpServer {
    */
   get pricingClient () {
     return this._pricingClient
+  }
+
+  /**
+   * The MCP client capabilities.
+   *
+   * @type {Capabilities}
+   */
+  get capabilities () {
+    return { ...this._capabilities }
+  }
+
+  /**
+   * Requests user confirmation for a destructive operation.
+   *
+   * If elicitation is enabled, presents a confirmation dialog via the MCP client.
+   * If elicitation is disabled, auto-confirms the operation.
+   *
+   * @param {string} message - The confirmation message to display.
+   * @param {object} schema - The JSON Schema for the confirmation form.
+   * @returns {Promise<{action: string, content?: {confirmed?: boolean}}>} The confirmation result.
+   */
+  async requestConfirmation (message, schema) {
+    if (!this._capabilities.elicitation) {
+      return { action: 'accept', content: { confirmed: true } }
+    }
+
+    return this.server.elicitInput({
+      message,
+      requestedSchema: schema
+    })
   }
 
   /**

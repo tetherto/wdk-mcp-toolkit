@@ -142,19 +142,16 @@ This will reduce your debt and improve your health factor. This transaction is I
 
 Do you want to proceed with this repayment?`
 
-        const confirmation = await server.server.elicitInput({
-          message: confirmationMessage,
-          requestedSchema: {
-            type: 'object',
-            properties: {
-              confirmed: {
-                type: 'boolean',
-                title: 'Confirm Repay',
-                description: 'Check to confirm and execute repayment'
-              }
-            },
-            required: ['confirmed']
-          }
+        const confirmation = await server.requestConfirmation(confirmationMessage, {
+          type: 'object',
+          properties: {
+            confirmed: {
+              type: 'boolean',
+              title: 'Confirm Repay',
+              description: 'Check to confirm and execute repayment'
+            }
+          },
+          required: ['confirmed']
         })
 
         if (confirmation.action !== 'accept' || !confirmation.content?.confirmed) {
