@@ -26,6 +26,10 @@
 
 /** @typedef {import('./src/server.js').ToolFunction} ToolFunction */
 
+/** @typedef {import('./src/server.js').Capabilities} Capabilities */
+
+/** @typedef {import('./src/server.js').ServerOptions} ServerOptions */
+
 export { WdkMcpServer, CHAINS, DEFAULT_TOKENS } from './src/server.js'
 
 export {

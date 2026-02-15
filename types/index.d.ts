@@ -4,6 +4,8 @@ export type WdkConfig = import("./src/server.js").WdkConfig;
 export type TokenMap = import("./src/server.js").TokenMap;
 export type TokenRegistry = import("./src/server.js").TokenRegistry;
 export type ToolFunction = import("./src/server.js").ToolFunction;
+export type Capabilities = import("./src/server.js").Capabilities;
+export type ServerOptions = import("./src/server.js").ServerOptions;
 export { WdkMcpServer, CHAINS, DEFAULT_TOKENS } from "./src/server.js";
 export { WALLET_TOOLS, WALLET_READ_TOOLS, WALLET_WRITE_TOOLS, getAddress, getBalance, getFeeRates, getMaxSpendableBtc, getTokenBalance, quoteSendTransaction, quoteTransfer, sendTransaction, transfer, sign, verify } from "./src/tools/wallet/index.js";
 export { PRICING_TOOLS, getCurrentPrice, getHistoricalPrice } from "./src/tools/pricing/index.js";

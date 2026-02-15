@@ -168,19 +168,16 @@ This swap is IRREVERSIBLE once broadcast to the ${chain} network.
 
 Do you want to proceed with this swap?`
 
-        const confirmation = await server.server.elicitInput({
-          message: confirmationMessage,
-          requestedSchema: {
-            type: 'object',
-            properties: {
-              confirmed: {
-                type: 'boolean',
-                title: 'Confirm Swap',
-                description: 'Check to confirm and execute swap'
-              }
-            },
-            required: ['confirmed']
-          }
+        const confirmation = await server.requestConfirmation(confirmationMessage, {
+          type: 'object',
+          properties: {
+            confirmed: {
+              type: 'boolean',
+              title: 'Confirm Swap',
+              description: 'Check to confirm and execute swap'
+            }
+          },
+          required: ['confirmed']
         })
 
         if (confirmation.action !== 'accept' || !confirmation.content?.confirmed) {

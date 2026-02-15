@@ -105,20 +105,16 @@ This transaction is IRREVERSIBLE once broadcast to the ${chain} network.
 
 Do you want to proceed with this transaction?`
 
-        const result = await server.server.elicitInput({
-          mode: 'form',
-          message: confirmationMessage,
-          requestedSchema: {
-            type: 'object',
-            properties: {
-              confirmed: {
-                type: 'boolean',
-                title: 'Confirm Transaction',
-                description: 'Check to confirm and send transaction'
-              }
-            },
-            required: ['confirmed']
-          }
+        const result = await server.requestConfirmation(confirmationMessage, {
+          type: 'object',
+          properties: {
+            confirmed: {
+              type: 'boolean',
+              title: 'Confirm Transaction',
+              description: 'Check to confirm and send transaction'
+            }
+          },
+          required: ['confirmed']
         })
 
         if (result.action !== 'accept' || !result.content?.confirmed) {

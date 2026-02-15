@@ -437,6 +437,69 @@ describe('WdkMcpServer', () => {
     })
   })
 
+  describe('capabilities', () => {
+    test('should default elicitation to true when no options provided', () => {
+      expect(server.capabilities).toEqual({ elicitation: true })
+    })
+
+    test('should accept capabilities in constructor options', () => {
+      const serverWithOptions = new WdkMcpServer('test', '1.0.0', {
+        capabilities: { elicitation: false }
+      })
+
+      expect(serverWithOptions.capabilities).toEqual({ elicitation: false })
+    })
+  })
+
+  describe('requestConfirmation', () => {
+    const message = 'Confirm this action?'
+    const schema = {
+      type: 'object',
+      properties: {
+        confirmed: { type: 'boolean', title: 'Confirm' }
+      },
+      required: ['confirmed']
+    }
+
+    test('should call server.elicitInput when elicitation is enabled', async () => {
+      const elicitInputMock = jest.fn().mockResolvedValue({
+        action: 'accept',
+        content: { confirmed: true }
+      })
+      server.server = { elicitInput: elicitInputMock }
+
+      const result = await server.requestConfirmation(message, schema)
+
+      expect(elicitInputMock).toHaveBeenCalledWith({
+        message,
+        requestedSchema: schema
+      })
+      expect(result).toEqual({ action: 'accept', content: { confirmed: true } })
+    })
+
+    test('should auto-confirm when elicitation is disabled', async () => {
+      const serverNoElicit = new WdkMcpServer('test', '1.0.0', {
+        capabilities: { elicitation: false }
+      })
+
+      const result = await serverNoElicit.requestConfirmation(message, schema)
+
+      expect(result).toEqual({ action: 'accept', content: { confirmed: true } })
+    })
+
+    test('should not call server.elicitInput when elicitation is disabled', async () => {
+      const serverNoElicit = new WdkMcpServer('test', '1.0.0', {
+        capabilities: { elicitation: false }
+      })
+      const elicitInputMock = jest.fn()
+      serverNoElicit.server = { elicitInput: elicitInputMock }
+
+      await serverNoElicit.requestConfirmation(message, schema)
+
+      expect(elicitInputMock).not.toHaveBeenCalled()
+    })
+  })
+
   describe('close', () => {
     test('should not throw if wdk is null', async () => {
       await expect(server.close()).resolves.not.toThrow()
