@@ -16,7 +16,7 @@
 
 /** @typedef {import('./src/server.js').TokenInfo} TokenInfo */
 
-/** @typedef {import('./src/server.js').IndexerConfig} IndexerConfig */
+/** @typedef {import('./src/server.js').WdkIndexerConfig} WdkIndexerConfig */
 
 /** @typedef {import('./src/server.js').WdkConfig} WdkConfig */
 

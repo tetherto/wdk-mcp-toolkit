@@ -1,5 +1,5 @@
 export type TokenInfo = import("./src/server.js").TokenInfo;
-export type IndexerConfig = import("./src/server.js").IndexerConfig;
+export type WdkIndexerConfig = import("./src/server.js").WdkIndexerConfig;
 export type WdkConfig = import("./src/server.js").WdkConfig;
 export type TokenMap = import("./src/server.js").TokenMap;
 export type TokenRegistry = import("./src/server.js").TokenRegistry;
