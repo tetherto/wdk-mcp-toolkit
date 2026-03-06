@@ -32,6 +32,8 @@ export const AMOUNT_ERROR_CODES = {
  */
 export class AmountParseError extends Error {
   /**
+   * Creates an AmountParseError with a message and error code.
+   *
    * @param {string} message - The error message.
    * @param {string} code - The error code for programmatic handling.
    */
