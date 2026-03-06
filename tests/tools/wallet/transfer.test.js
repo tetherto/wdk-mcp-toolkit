@@ -291,7 +291,11 @@ describe('transfer', () => {
           amount: '100'
         })
 
-        expect(transferMock).toHaveBeenCalled()
+        expect(transferMock).toHaveBeenCalledWith({
+          token: USDT_INFO.address,
+          recipient: RECIPIENT,
+          amount: 100000000n
+        })
       })
 
       test('should return hash in result', async () => {

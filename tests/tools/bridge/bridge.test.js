@@ -210,7 +210,12 @@ describe('bridge', () => {
           amount: '100'
         })
 
-        expect(bridgeMock).toHaveBeenCalled()
+        expect(bridgeMock).toHaveBeenCalledWith({
+          targetChain: 'arbitrum',
+          token: USDT_INFO.address,
+          amount: 100000000n,
+          recipient: WALLET_ADDRESS
+        })
       })
 
       test('should return hash in result', async () => {

@@ -197,7 +197,11 @@ describe('supply', () => {
           amount: '100'
         })
 
-        expect(supplyMock).toHaveBeenCalled()
+        expect(supplyMock).toHaveBeenCalledWith({
+          token: USDT_INFO.address,
+          amount: 100000000n,
+          onBehalfOf: WALLET_ADDRESS
+        })
       })
 
       test('should return hash in result', async () => {

@@ -394,7 +394,11 @@ describe('swap', () => {
           side: 'sell'
         })
 
-        expect(swapMock).toHaveBeenCalled()
+        expect(swapMock).toHaveBeenCalledWith({
+          tokenIn: USDT_INFO.address,
+          tokenOut: USDC_INFO.address,
+          tokenInAmount: 100000000n
+        })
       })
 
       test('should return hash in result', async () => {
