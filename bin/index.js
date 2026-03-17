@@ -20,6 +20,13 @@ const require = createRequire(import.meta.url)
 const pkg = require('../package.json')
 
 const COMMANDS = {
+  serve: {
+    description: 'Start the WDK MCP server on stdio (auto-discovers installed modules)',
+    handler: async () => {
+      const { serve } = await import('./serve.js')
+      await serve()
+    }
+  },
   setup: {
     description: 'Configure WDK MCP server for VS Code GitHub Copilot',
     handler: async () => {
@@ -53,6 +60,7 @@ function printHelp () {
   }
   console.log()
   console.log('Examples:')
+  console.log(`  ${pc.dim('$')} wdk-mcp-toolkit serve`)
   console.log(`  ${pc.dim('$')} wdk-mcp-toolkit setup`)
   console.log()
 }
