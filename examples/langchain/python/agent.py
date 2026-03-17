@@ -80,22 +80,22 @@ async def main():
     while True:
         try:
             user_input = input("You: ").strip()
+            if not user_input or user_input.lower() in ("quit", "exit", "q"):
+                break
+
+            result = await agent.ainvoke(
+                {"messages": [{"role": "user", "content": user_input}]}
+            )
+
+            for msg in result["messages"]:
+                if hasattr(msg, "content") and msg.content and msg.type == "ai":
+                    print(f"Agent: {msg.content}")
+            print()
         except (EOFError, KeyboardInterrupt):
-            print("\nGoodbye!")
             break
 
-        if not user_input or user_input.lower() in ("quit", "exit", "q"):
-            print("Goodbye!")
-            break
-
-        result = await agent.ainvoke(
-            {"messages": [{"role": "user", "content": user_input}]}
-        )
-
-        for msg in result["messages"]:
-            if hasattr(msg, "content") and msg.content and msg.type == "ai":
-                print(f"Agent: {msg.content}")
-        print()
+    print("Goodbye!")
+    await client.close()
 
 
 if __name__ == "__main__":
