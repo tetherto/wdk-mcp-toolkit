@@ -66,10 +66,7 @@ describe('parseAmountToBaseUnits', () => {
     })
 
     test('throws on precision overflow', () => {
-      expect(() => parseAmountToBaseUnits('1e-7', 6)).toThrow(
-        'Scientific notation "1e-7" expands to 7 decimal places, but token only supports 6.'
-      )
-      expect(() => parseAmountToBaseUnits('1e-7', 6)).toThrow(AmountParseError)
+      expect(() => parseAmountToBaseUnits('1e-7', 6)).toThrow(new AmountParseError('Scientific notation "1e-7" expands to 7 decimal places, but token only supports 6.'))
     })
   })
 
