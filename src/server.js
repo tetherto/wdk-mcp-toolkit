@@ -60,7 +60,8 @@ import { WdkIndexerClient } from '@tetherto/wdk-indexer-http'
 /**
  * @typedef {Object} ConfirmationResult
  * @property {string} action - The confirmation action (e.g., "accept", "decline").
- * @property {{confirmed?: boolean}} [content] - The confirmation content.
+ * @property {Object} [content] - The confirmation content.
+ * @property {boolean} [content.confirmed] - Whether the confirmation has been actually confirmed.
  */
 
 /**

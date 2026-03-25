@@ -313,6 +313,9 @@ export type ConfirmationResult = {
      * - The confirmation content.
      */
     content?: {
+        /**
+         * - Whether the confirmation has been actually confirmed.
+         */
         confirmed?: boolean;
     };
 };
