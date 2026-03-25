@@ -116,7 +116,7 @@ export class WdkMcpServer extends McpServer {
      * @param {Object} schema - The JSON Schema for the confirmation form.
      * @returns {Promise<ConfirmationResult>} The confirmation result.
      */
-    requestConfirmation(message: string, schema: object): Promise<ConfirmationResult>;
+    requestConfirmation(message: string, schema: ElicitRequestFormParams['requestedSchema']): Promise<ConfirmationResult>;
     /**
      * Enables WDK and initializes the wallet development kit.
      *
@@ -320,6 +320,7 @@ export type ConfirmationResult = {
     };
 };
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { ElicitRequestFormParams } from '@modelcontextprotocol/sdk/types.js';
 import WDK from '@tetherto/wdk';
 import { WdkIndexerClient } from '@tetherto/wdk-indexer-http';
 import { BitfinexPricingClient } from '@tetherto/wdk-pricing-bitfinex-http';

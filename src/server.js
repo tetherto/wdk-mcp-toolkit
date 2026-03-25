@@ -19,6 +19,7 @@ import { SwapProtocol, BridgeProtocol, LendingProtocol, FiatProtocol } from '@te
 import { BitfinexPricingClient } from '@tetherto/wdk-pricing-bitfinex-http'
 import { WdkIndexerClient } from '@tetherto/wdk-indexer-http'
 
+/** @typedef {import('@modelcontextprotocol/sdk/types.js').ElicitRequestFormParams} ElicitRequestFormParams */
 /** @typedef {import('@tetherto/wdk-indexer-http').WdkIndexerConfig} WdkIndexerConfig */
 /** @typedef {typeof import('@tetherto/wdk-wallet').default} WalletManager */
 
@@ -257,7 +258,7 @@ export class WdkMcpServer extends McpServer {
    * If elicitation is disabled, auto-confirms the operation.
    *
    * @param {string} message - The confirmation message to display.
-   * @param {Object} schema - The JSON Schema for the confirmation form.
+   * @param {ElicitRequestFormParams['requestedSchema']} schema - The JSON Schema for the confirmation form.
    * @returns {Promise<ConfirmationResult>} The confirmation result.
    */
   async requestConfirmation (message, schema) {
