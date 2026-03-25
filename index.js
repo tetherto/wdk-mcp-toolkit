@@ -30,6 +30,8 @@
 
 /** @typedef {import('./src/server.js').ServerOptions} ServerOptions */
 
+/** @typedef {import('./src/server.js').ConfirmationResult} ConfirmationResult */
+
 export { WdkMcpServer, CHAINS, DEFAULT_TOKENS } from './src/server.js'
 
 export {
