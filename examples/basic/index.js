@@ -18,6 +18,10 @@ import { FIAT_TOOLS } from '../../src/tools/fiat/index.js'
 
 const HAS_INDEXER = !!process.env.WDK_INDEXER_API_KEY
 const HAS_FIAT = process.env.MOONPAY_API_KEY && process.env.MOONPAY_SECRET_KEY
+if (process.env.WDK_MCP_ELICITATION && !['true', 'false'].includes(process.env.WDK_MCP_ELICITATION)) {
+  throw new Error("The WDK_MCP_ELICITATION environment variable can only be set to 'true' or 'false'.")
+}
+
 const HAS_ELICITATION = process.env.WDK_MCP_ELICITATION !== 'false'
 
 async function main () {
