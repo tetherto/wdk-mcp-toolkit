@@ -491,22 +491,13 @@ describe('WdkMcpServer', () => {
       const serverNoElicit = new WdkMcpServer('test', '1.0.0', {
         capabilities: { elicitation: false }
       })
-
-      const result = await serverNoElicit.requestConfirmation(message, schema)
-
-      expect(result).toEqual({ action: 'accept', content: { confirmed: true } })
-    })
-
-    test('should not call server.elicitInput when elicitation is disabled', async () => {
-      const serverNoElicit = new WdkMcpServer('test', '1.0.0', {
-        capabilities: { elicitation: false }
-      })
       const elicitInputMock = jest.fn()
       serverNoElicit.server = { elicitInput: elicitInputMock }
 
-      await serverNoElicit.requestConfirmation(message, schema)
+      const result = await serverNoElicit.requestConfirmation(message, schema)
 
       expect(elicitInputMock).not.toHaveBeenCalled()
+      expect(result).toEqual({ action: 'accept', content: { confirmed: true } })
     })
   })
 
