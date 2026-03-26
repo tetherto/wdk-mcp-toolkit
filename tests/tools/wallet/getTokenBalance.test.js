@@ -57,8 +57,7 @@ describe('getTokenBalance', () => {
         const result = await handler({ chain: 'ethereum', token: 'USDT' })
 
         expect(result.isError).toBe(true)
-        expect(result.content[0].text).toContain('Token symbol "USDT" not registered')
-        expect(result.content[0].text).toContain('USDC, DAI')
+        expect(result.content[0].text).toBe('Error getting token balance on ethereum: Token symbol "USDT" not registered for ethereum. Available tokens: USDC, DAI')
         expect(result.structuredContent).toBeUndefined()
       })
 
@@ -69,7 +68,7 @@ describe('getTokenBalance', () => {
         const result = await handler({ chain: 'ethereum', token: 'USDT' })
 
         expect(result.isError).toBe(true)
-        expect(result.content[0].text).toContain('Available tokens: none')
+        expect(result.content[0].text).toBe('Error getting token balance on ethereum: Token symbol "USDT" not registered for ethereum. Available tokens: none')
         expect(result.structuredContent).toBeUndefined()
       })
     })

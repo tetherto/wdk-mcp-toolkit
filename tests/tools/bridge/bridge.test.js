@@ -18,9 +18,7 @@ describe('bridge', () => {
       wdk: {
         getAccount: jest.fn()
       },
-      server: {
-        elicitInput: jest.fn()
-      }
+      requestConfirmation: jest.fn()
     }
   })
 
@@ -84,7 +82,7 @@ describe('bridge', () => {
     })
 
     describe('confirmation flow', () => {
-      test('should call server.server.elicitInput with confirmation message', async () => {
+      test('should call server.requestConfirmation with confirmation message', async () => {
         const quoteBridgeMock = jest.fn().mockResolvedValue({
           fee: 21000000000000n,
           bridgeFee: 500000000000000n
@@ -100,7 +98,7 @@ describe('bridge', () => {
 
         server.getTokenInfo.mockReturnValue(USDT_INFO)
         server.wdk.getAccount.mockResolvedValue(accountMock)
-        server.server.elicitInput.mockResolvedValue({ action: 'decline' })
+        server.requestConfirmation.mockResolvedValue({ action: 'decline' })
 
         await handler({
           chain: 'ethereum',
@@ -109,10 +107,19 @@ describe('bridge', () => {
           amount: '100'
         })
 
-        expect(server.server.elicitInput).toHaveBeenCalledWith(
-          expect.objectContaining({
-            message: expect.stringContaining('BRIDGE CONFIRMATION REQUIRED')
-          })
+        expect(server.requestConfirmation).toHaveBeenCalledWith(
+          `⚠️  BRIDGE CONFIRMATION REQUIRED\n\nProtocol: usdt0\nFrom: ethereum\nTo: arbitrum\nToken: USDT\nAmount: 100\nRecipient: ${WALLET_ADDRESS}\nGas Fee: 21000000000000\nBridge Fee: 500000000000000\nTotal Fee: 521000000000000\n\nThis bridge is IRREVERSIBLE once broadcast. Tokens will arrive on arbitrum after confirmation (may take minutes to hours).\n\nDo you want to proceed with this bridge?`,
+          {
+            type: 'object',
+            properties: {
+              confirmed: {
+                type: 'boolean',
+                title: 'Confirm Bridge',
+                description: 'Check to confirm and execute bridge'
+              }
+            },
+            required: ['confirmed']
+          }
         )
       })
 
@@ -132,7 +139,7 @@ describe('bridge', () => {
 
         server.getTokenInfo.mockReturnValue(USDT_INFO)
         server.wdk.getAccount.mockResolvedValue(accountMock)
-        server.server.elicitInput.mockResolvedValue({ action: 'accept', content: { confirmed: false } })
+        server.requestConfirmation.mockResolvedValue({ action: 'accept', content: { confirmed: false } })
 
         const result = await handler({
           chain: 'ethereum',
@@ -160,7 +167,7 @@ describe('bridge', () => {
 
         server.getTokenInfo.mockReturnValue(USDT_INFO)
         server.wdk.getAccount.mockResolvedValue(accountMock)
-        server.server.elicitInput.mockResolvedValue({ action: 'decline' })
+        server.requestConfirmation.mockResolvedValue({ action: 'decline' })
 
         const result = await handler({
           chain: 'ethereum',
@@ -194,7 +201,7 @@ describe('bridge', () => {
 
         server.getTokenInfo.mockReturnValue(USDT_INFO)
         server.wdk.getAccount.mockResolvedValue(accountMock)
-        server.server.elicitInput.mockResolvedValue({ action: 'accept', content: { confirmed: true } })
+        server.requestConfirmation.mockResolvedValue({ action: 'accept', content: { confirmed: true } })
 
         await handler({
           chain: 'ethereum',
@@ -203,7 +210,12 @@ describe('bridge', () => {
           amount: '100'
         })
 
-        expect(bridgeMock).toHaveBeenCalled()
+        expect(bridgeMock).toHaveBeenCalledWith({
+          targetChain: 'arbitrum',
+          token: USDT_INFO.address,
+          amount: 100000000n,
+          recipient: WALLET_ADDRESS
+        })
       })
 
       test('should return hash in result', async () => {
@@ -226,7 +238,7 @@ describe('bridge', () => {
 
         server.getTokenInfo.mockReturnValue(USDT_INFO)
         server.wdk.getAccount.mockResolvedValue(accountMock)
-        server.server.elicitInput.mockResolvedValue({ action: 'accept', content: { confirmed: true } })
+        server.requestConfirmation.mockResolvedValue({ action: 'accept', content: { confirmed: true } })
 
         const result = await handler({
           chain: 'ethereum',

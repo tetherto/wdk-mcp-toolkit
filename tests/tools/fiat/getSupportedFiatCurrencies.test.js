@@ -151,7 +151,7 @@ describe('getSupportedFiatCurrencies', () => {
         const result = await handler({ chain: 'ethereum' })
 
         expect(result.content[0].type).toBe('text')
-        expect(result.content[0].text).toContain('USD')
+        expect(result.structuredContent).toEqual([{ code: 'USD', name: 'US Dollar', decimals: 2 }])
       })
     })
 

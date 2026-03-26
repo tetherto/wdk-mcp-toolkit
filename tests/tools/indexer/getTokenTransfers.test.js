@@ -100,6 +100,7 @@ describe('getTokenTransfers', () => {
       })
 
       expect(result.content[0].text).toContain('Found 1 USDT transfer(s) on ethereum')
+      expect(result.structuredContent).toEqual(MOCK_TRANSFERS)
     })
 
     test('should return no transfers message when empty', async () => {
@@ -112,6 +113,7 @@ describe('getTokenTransfers', () => {
       })
 
       expect(result.content[0].text).toContain(`No transfers found for ${ADDRESS} on ethereum`)
+      expect(result.structuredContent).toEqual({ transfers: [] })
     })
 
     test('should return indexer response as structured content', async () => {

@@ -49,7 +49,7 @@ describe('sign', () => {
         const result = await handler({ chain: 'ethereum', message: '' })
 
         expect(result.isError).toBe(true)
-        expect(result.content[0].text).toContain('Message cannot be empty')
+        expect(result.content[0].text).toBe('Error signing message on ethereum: Message cannot be empty')
         expect(result.structuredContent).toBeUndefined()
       })
 
@@ -57,7 +57,7 @@ describe('sign', () => {
         const result = await handler({ chain: 'ethereum', message: '   ' })
 
         expect(result.isError).toBe(true)
-        expect(result.content[0].text).toContain('Message cannot be empty')
+        expect(result.content[0].text).toBe('Error signing message on ethereum: Message cannot be empty')
         expect(result.structuredContent).toBeUndefined()
       })
     })

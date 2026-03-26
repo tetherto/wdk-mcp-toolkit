@@ -151,7 +151,7 @@ describe('getSupportedCryptoAssets', () => {
         const result = await handler({ chain: 'ethereum' })
 
         expect(result.content[0].type).toBe('text')
-        expect(result.content[0].text).toContain('eth')
+        expect(result.structuredContent).toEqual([{ code: 'eth', name: 'Ethereum', networkCode: 'ethereum', decimals: 18 }])
       })
     })
 

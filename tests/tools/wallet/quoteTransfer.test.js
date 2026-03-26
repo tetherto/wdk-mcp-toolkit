@@ -62,7 +62,7 @@ describe('quoteTransfer', () => {
         })
 
         expect(result.isError).toBe(true)
-        expect(result.content[0].text).toContain('Token symbol "USDT" not registered')
+        expect(result.content[0].text).toBe('Error quoting transfer on ethereum: Token symbol "USDT" not registered for ethereum. Available tokens: USDC, DAI')
         expect(result.structuredContent).toBeUndefined()
       })
 
@@ -77,7 +77,7 @@ describe('quoteTransfer', () => {
         })
 
         expect(result.isError).toBe(true)
-        expect(result.content[0].text).toContain('Invalid amount')
+        expect(result.content[0].text).toBe('Error quoting transfer on ethereum: Invalid amount format: "invalid". Expected a positive number (e.g., "100", "2.50", "1,000.00").')
         expect(result.structuredContent).toBeUndefined()
       })
 
@@ -92,7 +92,7 @@ describe('quoteTransfer', () => {
         })
 
         expect(result.isError).toBe(true)
-        expect(result.content[0].text).toContain('Amount must be greater than zero')
+        expect(result.content[0].text).toBe('Error quoting transfer on ethereum: Amount must be greater than zero')
         expect(result.structuredContent).toBeUndefined()
       })
     })
@@ -160,7 +160,7 @@ describe('quoteTransfer', () => {
         expect(result.isError).toBeUndefined()
         expect(result.content).toHaveLength(1)
         expect(result.content[0].type).toBe('text')
-        expect(result.content[0].text).toContain('Estimated fee for transferring 100 USDT')
+        expect(result.content[0].text).toBe('Estimated fee for transferring 100 USDT: 21000000000000')
         expect(result.structuredContent).toEqual({ fee: '21000000000000' })
       })
     })

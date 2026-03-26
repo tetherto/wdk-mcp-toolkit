@@ -18,9 +18,7 @@ describe('transfer', () => {
       wdk: {
         getAccount: jest.fn()
       },
-      server: {
-        elicitInput: jest.fn()
-      }
+      requestConfirmation: jest.fn()
     }
   })
 
@@ -55,7 +53,7 @@ describe('transfer', () => {
           transfer: jest.fn()
         }
         server.wdk.getAccount.mockResolvedValue(accountMock)
-        server.server.elicitInput.mockResolvedValue({ action: 'decline' })
+        server.requestConfirmation.mockResolvedValue({ action: 'decline' })
 
         await handler({
           chain: 'ethereum',
@@ -78,7 +76,7 @@ describe('transfer', () => {
         })
 
         expect(result.isError).toBe(true)
-        expect(result.content[0].text).toContain('Token "UNKNOWN" not registered for ethereum')
+        expect(result.content[0].text).toBe('Error transferring token on ethereum: Token "UNKNOWN" not registered for ethereum. Available tokens: USDT, USDC')
       })
 
       test('should include available tokens in error message', async () => {
@@ -91,7 +89,7 @@ describe('transfer', () => {
           amount: '100'
         })
 
-        expect(result.content[0].text).toContain('Available tokens: USDT, USDC')
+        expect(result.content[0].text).toBe('Error transferring token on ethereum: Token "UNKNOWN" not registered for ethereum. Available tokens: USDT, USDC')
       })
     })
 
@@ -107,7 +105,7 @@ describe('transfer', () => {
         })
 
         expect(result.isError).toBe(true)
-        expect(result.content[0].text).toContain('Invalid amount format')
+        expect(result.content[0].text).toBe('Error transferring token on ethereum: Invalid amount format: "abc". Expected a positive number (e.g., "100", "2.50", "1,000.00").')
       })
 
       test('should throw if amount is zero', async () => {
@@ -121,7 +119,7 @@ describe('transfer', () => {
         })
 
         expect(result.isError).toBe(true)
-        expect(result.content[0].text).toContain('Amount must be greater than zero')
+        expect(result.content[0].text).toBe('Error transferring token on ethereum: Amount must be greater than zero')
       })
 
       test('should throw if amount is negative', async () => {
@@ -135,7 +133,7 @@ describe('transfer', () => {
         })
 
         expect(result.isError).toBe(true)
-        expect(result.content[0].text).toContain('Negative amounts are not allowed')
+        expect(result.content[0].text).toBe('Error transferring token on ethereum: Negative amounts are not allowed: "-10".')
       })
     })
 
@@ -149,7 +147,7 @@ describe('transfer', () => {
           transfer: jest.fn()
         }
         server.wdk.getAccount.mockResolvedValue(accountMock)
-        server.server.elicitInput.mockResolvedValue({ action: 'decline' })
+        server.requestConfirmation.mockResolvedValue({ action: 'decline' })
 
         await handler({
           chain: 'ethereum',
@@ -176,7 +174,7 @@ describe('transfer', () => {
           transfer: jest.fn()
         }
         server.wdk.getAccount.mockResolvedValue(accountMock)
-        server.server.elicitInput.mockResolvedValue({ action: 'decline' })
+        server.requestConfirmation.mockResolvedValue({ action: 'decline' })
 
         await handler({
           chain: 'ethereum',
@@ -194,7 +192,7 @@ describe('transfer', () => {
     })
 
     describe('confirmation flow', () => {
-      test('should call server.server.elicitInput with transfer details', async () => {
+      test('should call server.requestConfirmation with transfer details', async () => {
         server.getTokenInfo.mockReturnValue(USDT_INFO)
 
         const quoteTransferMock = jest.fn().mockResolvedValue({ fee: 21000000000000n })
@@ -203,7 +201,7 @@ describe('transfer', () => {
           transfer: jest.fn()
         }
         server.wdk.getAccount.mockResolvedValue(accountMock)
-        server.server.elicitInput.mockResolvedValue({ action: 'decline' })
+        server.requestConfirmation.mockResolvedValue({ action: 'decline' })
 
         await handler({
           chain: 'ethereum',
@@ -212,10 +210,19 @@ describe('transfer', () => {
           amount: '100'
         })
 
-        expect(server.server.elicitInput).toHaveBeenCalledWith(
-          expect.objectContaining({
-            message: expect.stringContaining('TOKEN TRANSFER CONFIRMATION REQUIRED')
-          })
+        expect(server.requestConfirmation).toHaveBeenCalledWith(
+          '⚠️  TOKEN TRANSFER CONFIRMATION REQUIRED\n\nToken: USDT\nTo: 0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb7\nAmount: 100 USDT (100000000 base units)\nEstimated Fee: 21000000000000\n\nThis transfer is IRREVERSIBLE once broadcast to the ethereum network.\n\nDo you want to proceed with this transfer?',
+          {
+            type: 'object',
+            properties: {
+              confirmed: {
+                type: 'boolean',
+                title: 'Confirm Transfer',
+                description: 'Check to confirm and send transfer'
+              }
+            },
+            required: ['confirmed']
+          }
         )
       })
 
@@ -228,7 +235,7 @@ describe('transfer', () => {
           transfer: jest.fn()
         }
         server.wdk.getAccount.mockResolvedValue(accountMock)
-        server.server.elicitInput.mockResolvedValue({ action: 'accept', content: { confirmed: false } })
+        server.requestConfirmation.mockResolvedValue({ action: 'accept', content: { confirmed: false } })
 
         const result = await handler({
           chain: 'ethereum',
@@ -249,7 +256,7 @@ describe('transfer', () => {
           transfer: jest.fn()
         }
         server.wdk.getAccount.mockResolvedValue(accountMock)
-        server.server.elicitInput.mockResolvedValue({ action: 'decline' })
+        server.requestConfirmation.mockResolvedValue({ action: 'decline' })
 
         const result = await handler({
           chain: 'ethereum',
@@ -275,7 +282,7 @@ describe('transfer', () => {
           transfer: transferMock
         }
         server.wdk.getAccount.mockResolvedValue(accountMock)
-        server.server.elicitInput.mockResolvedValue({ action: 'accept', content: { confirmed: true } })
+        server.requestConfirmation.mockResolvedValue({ action: 'accept', content: { confirmed: true } })
 
         await handler({
           chain: 'ethereum',
@@ -284,7 +291,11 @@ describe('transfer', () => {
           amount: '100'
         })
 
-        expect(transferMock).toHaveBeenCalled()
+        expect(transferMock).toHaveBeenCalledWith({
+          token: USDT_INFO.address,
+          recipient: RECIPIENT,
+          amount: 100000000n
+        })
       })
 
       test('should return hash in result', async () => {
@@ -299,7 +310,7 @@ describe('transfer', () => {
           transfer: transferMock
         }
         server.wdk.getAccount.mockResolvedValue(accountMock)
-        server.server.elicitInput.mockResolvedValue({ action: 'accept', content: { confirmed: true } })
+        server.requestConfirmation.mockResolvedValue({ action: 'accept', content: { confirmed: true } })
 
         const result = await handler({
           chain: 'ethereum',
@@ -323,7 +334,7 @@ describe('transfer', () => {
           transfer: transferMock
         }
         server.wdk.getAccount.mockResolvedValue(accountMock)
-        server.server.elicitInput.mockResolvedValue({ action: 'accept', content: { confirmed: true } })
+        server.requestConfirmation.mockResolvedValue({ action: 'accept', content: { confirmed: true } })
 
         const result = await handler({
           chain: 'ethereum',

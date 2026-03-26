@@ -18,9 +18,7 @@ describe('withdraw', () => {
       wdk: {
         getAccount: jest.fn()
       },
-      server: {
-        elicitInput: jest.fn()
-      }
+      requestConfirmation: jest.fn()
     }
   })
 
@@ -95,7 +93,7 @@ describe('withdraw', () => {
 
         server.getTokenInfo.mockReturnValue(USDT_INFO)
         server.wdk.getAccount.mockResolvedValue(accountMock)
-        server.server.elicitInput.mockResolvedValue({ action: 'accept', content: { confirmed: true } })
+        server.requestConfirmation.mockResolvedValue({ action: 'accept', content: { confirmed: true } })
 
         await handler({
           chain: 'ethereum',
@@ -126,7 +124,7 @@ describe('withdraw', () => {
 
         server.getTokenInfo.mockReturnValue(USDT_INFO)
         server.wdk.getAccount.mockResolvedValue(accountMock)
-        server.server.elicitInput.mockResolvedValue({ action: 'accept', content: { confirmed: true } })
+        server.requestConfirmation.mockResolvedValue({ action: 'accept', content: { confirmed: true } })
 
         await handler({
           chain: 'ethereum',
@@ -153,7 +151,7 @@ describe('withdraw', () => {
 
         server.getTokenInfo.mockReturnValue(USDT_INFO)
         server.wdk.getAccount.mockResolvedValue(accountMock)
-        server.server.elicitInput.mockResolvedValue({ action: 'accept', content: { confirmed: true } })
+        server.requestConfirmation.mockResolvedValue({ action: 'accept', content: { confirmed: true } })
 
         await handler({
           chain: 'ethereum',
@@ -178,7 +176,7 @@ describe('withdraw', () => {
 
         server.getTokenInfo.mockReturnValue(USDT_INFO)
         server.wdk.getAccount.mockResolvedValue(accountMock)
-        server.server.elicitInput.mockResolvedValue({ action: 'accept', content: { confirmed: true } })
+        server.requestConfirmation.mockResolvedValue({ action: 'accept', content: { confirmed: true } })
 
         await handler({
           chain: 'ethereum',
@@ -207,7 +205,7 @@ describe('withdraw', () => {
 
         server.getTokenInfo.mockReturnValue(USDT_INFO)
         server.wdk.getAccount.mockResolvedValue(accountMock)
-        server.server.elicitInput.mockResolvedValue({ action: 'accept', content: { confirmed: true } })
+        server.requestConfirmation.mockResolvedValue({ action: 'accept', content: { confirmed: true } })
 
         await handler({
           chain: 'ethereum',
@@ -239,7 +237,7 @@ describe('withdraw', () => {
 
         server.getTokenInfo.mockReturnValue(USDT_INFO)
         server.wdk.getAccount.mockResolvedValue(accountMock)
-        server.server.elicitInput.mockResolvedValue({ action: 'accept', content: { confirmed: true } })
+        server.requestConfirmation.mockResolvedValue({ action: 'accept', content: { confirmed: true } })
 
         await handler({
           chain: 'ethereum',
@@ -247,10 +245,19 @@ describe('withdraw', () => {
           amount: '100'
         })
 
-        expect(server.server.elicitInput).toHaveBeenCalledWith(
-          expect.objectContaining({
-            message: expect.stringContaining('WITHDRAW CONFIRMATION')
-          })
+        expect(server.requestConfirmation).toHaveBeenCalledWith(
+          `⚠️  WITHDRAW CONFIRMATION REQUIRED\n\nProtocol: aave\nChain: ethereum\nToken: USDT\nAmount: 100\nRecipient: 0x123\nEstimated Fee: 21000000000000\n\nYour aTokens will be burned in exchange for the underlying tokens. This transaction is IRREVERSIBLE once broadcast.\n\nDo you want to proceed with this withdrawal?`,
+          {
+            type: 'object',
+            properties: {
+              confirmed: {
+                type: 'boolean',
+                title: 'Confirm Withdraw',
+                description: 'Check to confirm and execute withdrawal'
+              }
+            },
+            required: ['confirmed']
+          }
         )
       })
 
@@ -267,7 +274,7 @@ describe('withdraw', () => {
 
         server.getTokenInfo.mockReturnValue(USDT_INFO)
         server.wdk.getAccount.mockResolvedValue(accountMock)
-        server.server.elicitInput.mockResolvedValue({ action: 'reject' })
+        server.requestConfirmation.mockResolvedValue({ action: 'reject' })
 
         const result = await handler({
           chain: 'ethereum',
@@ -294,7 +301,7 @@ describe('withdraw', () => {
 
         server.getTokenInfo.mockReturnValue(USDT_INFO)
         server.wdk.getAccount.mockResolvedValue(accountMock)
-        server.server.elicitInput.mockResolvedValue({ action: 'accept', content: { confirmed: true } })
+        server.requestConfirmation.mockResolvedValue({ action: 'accept', content: { confirmed: true } })
 
         const result = await handler({
           chain: 'ethereum',
@@ -321,7 +328,7 @@ describe('withdraw', () => {
 
         server.getTokenInfo.mockReturnValue(USDT_INFO)
         server.wdk.getAccount.mockResolvedValue(accountMock)
-        server.server.elicitInput.mockResolvedValue({ action: 'accept', content: { confirmed: true } })
+        server.requestConfirmation.mockResolvedValue({ action: 'accept', content: { confirmed: true } })
 
         const result = await handler({
           chain: 'ethereum',

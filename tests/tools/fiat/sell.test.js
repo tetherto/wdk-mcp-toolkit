@@ -149,7 +149,7 @@ describe('sell', () => {
         expect(result.isError).toBeUndefined()
         expect(result.content).toHaveLength(1)
         expect(result.content[0].type).toBe('text')
-        expect(result.content[0].text).toContain('https://sell.moonpay.com/abc123')
+        expect(result.content[0].text).toBe('Open this URL to complete your sale:\n\nhttps://sell.moonpay.com/abc123')
         expect(result.structuredContent).toEqual({
           sellUrl: 'https://sell.moonpay.com/abc123',
           protocol: 'moonpay'

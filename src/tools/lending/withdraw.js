@@ -141,19 +141,16 @@ Your aTokens will be burned in exchange for the underlying tokens. This transact
 
 Do you want to proceed with this withdrawal?`
 
-        const confirmation = await server.server.elicitInput({
-          message: confirmationMessage,
-          requestedSchema: {
-            type: 'object',
-            properties: {
-              confirmed: {
-                type: 'boolean',
-                title: 'Confirm Withdraw',
-                description: 'Check to confirm and execute withdrawal'
-              }
-            },
-            required: ['confirmed']
-          }
+        const confirmation = await server.requestConfirmation(confirmationMessage, {
+          type: 'object',
+          properties: {
+            confirmed: {
+              type: 'boolean',
+              title: 'Confirm Withdraw',
+              description: 'Check to confirm and execute withdrawal'
+            }
+          },
+          required: ['confirmed']
         })
 
         if (confirmation.action !== 'accept' || !confirmation.content?.confirmed) {

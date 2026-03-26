@@ -24,6 +24,7 @@ export function parseAmountToBaseUnits(amount: string, decimals: number): bigint
  * @param {bigint} baseUnits - The amount in base units
  * @param {number} decimals - The number of decimal places for the token
  * @returns {string} The human-readable amount string
+ * @throws {AmountParseError} If baseUnits is a negative integer, or decimals is invalid.
  *
  * @example
  * formatBaseUnitsToAmount(2010000n, 6)  // Returns "2.01"
@@ -48,6 +49,8 @@ export namespace AMOUNT_ERROR_CODES {
  */
 export class AmountParseError extends Error {
     /**
+     * Creates an AmountParseError with a message and error code.
+     *
      * @param {string} message - The error message.
      * @param {string} code - The error code for programmatic handling.
      */

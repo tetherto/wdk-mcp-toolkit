@@ -18,6 +18,11 @@ import { FIAT_TOOLS } from '../../src/tools/fiat/index.js'
 
 const HAS_INDEXER = !!process.env.WDK_INDEXER_API_KEY
 const HAS_FIAT = process.env.MOONPAY_API_KEY && process.env.MOONPAY_SECRET_KEY
+if (process.env.WDK_MCP_ELICITATION && !['true', 'false'].includes(process.env.WDK_MCP_ELICITATION)) {
+  throw new Error("The WDK_MCP_ELICITATION environment variable can only be set to 'true' or 'false'.")
+}
+
+const HAS_ELICITATION = process.env.WDK_MCP_ELICITATION !== 'false'
 
 async function main () {
   if (!process.env.WDK_SEED) {
@@ -26,7 +31,11 @@ async function main () {
     process.exit(1)
   }
 
-  const server = new WdkMcpServer('wdk-mcp-server', '1.0.0')
+  const server = new WdkMcpServer('wdk-mcp-server', '1.0.0', {
+    capabilities: {
+      elicitation: HAS_ELICITATION
+    }
+  })
     .useWdk({ seed: process.env.WDK_SEED })
     .registerWallet('ethereum', WalletManagerEvm, {
       provider: 'https://rpc.mevblocker.io/fast'
@@ -93,6 +102,8 @@ async function main () {
   } else {
     console.error('Fiat: disabled (set MOONPAY_API_KEY and MOONPAY_SECRET_KEY to enable)')
   }
+
+  console.error('Elicitation:', HAS_ELICITATION ? 'enabled' : 'disabled')
 }
 
 main().catch((error) => {

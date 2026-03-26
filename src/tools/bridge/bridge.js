@@ -155,19 +155,16 @@ This bridge is IRREVERSIBLE once broadcast. Tokens will arrive on ${targetChain}
 
 Do you want to proceed with this bridge?`
 
-        const confirmation = await server.server.elicitInput({
-          message: confirmationMessage,
-          requestedSchema: {
-            type: 'object',
-            properties: {
-              confirmed: {
-                type: 'boolean',
-                title: 'Confirm Bridge',
-                description: 'Check to confirm and execute bridge'
-              }
-            },
-            required: ['confirmed']
-          }
+        const confirmation = await server.requestConfirmation(confirmationMessage, {
+          type: 'object',
+          properties: {
+            confirmed: {
+              type: 'boolean',
+              title: 'Confirm Bridge',
+              description: 'Check to confirm and execute bridge'
+            }
+          },
+          required: ['confirmed']
         })
 
         if (confirmation.action !== 'accept' || !confirmation.content?.confirmed) {

@@ -103,7 +103,8 @@ describe('getHistoricalPrice', () => {
 
       const result = await handler({ from: 'BTC', to: 'USD' })
 
-      expect(result.content[0].text).toContain('2 data points')
+      expect(result.content[0].text).toContain('BTC/USD historical data: 2 data points')
+      expect(result.structuredContent).toEqual({ from: 'BTC', to: 'USD', points: MOCK_SERIES })
     })
 
     test('should return points in structured content', async () => {
@@ -119,7 +120,8 @@ describe('getHistoricalPrice', () => {
 
       const result = await handler({ from: 'BTC', to: 'USD' })
 
-      expect(result.content[0].text).toContain('0 data points')
+      expect(result.content[0].text).toContain('BTC/USD historical data: 0 data points')
+      expect(result.structuredContent).toEqual({ from: 'BTC', to: 'USD', points: [] })
     })
 
     test('should return error with message on exception', async () => {

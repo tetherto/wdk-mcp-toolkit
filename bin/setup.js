@@ -22,6 +22,26 @@ import { promisify } from 'node:util'
 
 const exec = promisify(execCallback)
 
+/**
+ * MCP protocol features that can be enabled/disabled based on client support.
+ * Each feature maps to a capability that the MCP client must support.
+ *
+ * @see https://modelcontextprotocol.io/clients
+ */
+const MCP_FEATURES = [
+  {
+    name: 'Elicitations',
+    envKey: 'WDK_MCP_ELICITATION',
+    description: 'Allows the server to request additional input from the user during tool execution.',
+    capabilities: [
+      'Human-in-the-loop confirmation for transactions (send, swap, bridge, etc.)',
+      'Interactive approval before any irreversible blockchain operation'
+    ],
+    default: true,
+    disabledNote: 'Write operations (transfers, swaps, etc.) will execute without confirmation prompts.'
+  }
+]
+
 const DEPENDENCIES = [
   {
     name: '@tetherto/wdk-wallet-btc',
@@ -92,6 +112,8 @@ async function runSetupWizard () {
   const moonpay = await collectMoonPayCredentials()
   config.moonPayApiKey = moonpay.apiKey
   config.moonPaySecretKey = moonpay.secretKey
+
+  config.mcpFeatures = await collectMcpCapabilities()
 
   await selectAndInstallDependencies()
 
@@ -231,6 +253,49 @@ async function collectMoonPayCredentials () {
   }
 }
 
+async function collectMcpCapabilities () {
+  console.log(pc.white(pc.bold('MCP CLIENT CAPABILITIES')))
+  console.log(pc.dim('──────────────────────────────────────────────────────────'))
+  console.log()
+  console.log('The MCP protocol supports optional features that enhance the')
+  console.log('server experience. Not all MCP clients support every feature.')
+  console.log()
+  console.log(pc.cyan('Check client compatibility: ') + pc.underline('https://modelcontextprotocol.io/clients'))
+  console.log()
+  console.log(pc.yellow('Ensure your MCP client supports the features you enable.'))
+  console.log(pc.yellow('Disabling unsupported features prevents runtime errors.'))
+  console.log()
+
+  const choices = MCP_FEATURES.map(feature => ({
+    name: `${pc.bold(feature.name)}\n     ${pc.dim(feature.description)}\n     ${pc.cyan('Enables:')} ${feature.capabilities.join(', ')}\n     ${pc.yellow('If disabled:')} ${feature.disabledNote}`,
+    value: feature.envKey,
+    checked: feature.default
+  }))
+
+  const selected = await checkbox({
+    message: 'Select MCP features to enable (space to toggle):',
+    choices,
+    pageSize: 15
+  })
+
+  const result = {}
+  for (const feature of MCP_FEATURES) {
+    result[feature.envKey] = selected.includes(feature.envKey)
+  }
+
+  if (selected.length === 0) {
+    console.log(pc.yellow('\nNo MCP features selected. The server will run in basic mode.'))
+  } else {
+    const names = MCP_FEATURES
+      .filter(f => selected.includes(f.envKey))
+      .map(f => f.name)
+    console.log(pc.green(`\nEnabled: ${names.join(', ')}`))
+  }
+
+  console.log()
+  return result
+}
+
 async function selectAndInstallDependencies () {
   console.log(pc.green(pc.bold('DEPENDENCIES')))
   console.log(pc.dim('──────────────────────────────────────────────────────────'))
@@ -299,6 +364,12 @@ async function generateConfig (config) {
   if (config.moonPayApiKey) {
     mcpConfig.servers.wdk.env.MOONPAY_API_KEY = config.moonPayApiKey
     mcpConfig.servers.wdk.env.MOONPAY_SECRET_KEY = config.moonPaySecretKey
+  }
+
+  if (config.mcpFeatures) {
+    for (const feature of MCP_FEATURES) {
+      mcpConfig.servers.wdk.env[feature.envKey] = config.mcpFeatures[feature.envKey] ? 'true' : 'false'
+    }
   }
 
   const vscodeDir = path.join(process.cwd(), '.vscode')
@@ -374,6 +445,20 @@ function printSuccessMessage (config) {
     console.log(pc.dim('Disabled capabilities (re-run setup to enable):'))
     disabledCapabilities.forEach(cap => {
       console.log(pc.dim(`  - ${cap}`))
+    })
+  }
+
+  if (config.mcpFeatures) {
+    const enabledFeatures = MCP_FEATURES.filter(f => config.mcpFeatures[f.envKey])
+    const disabledFeatures = MCP_FEATURES.filter(f => !config.mcpFeatures[f.envKey])
+
+    console.log()
+    console.log(pc.bold('MCP features:'))
+    enabledFeatures.forEach(f => {
+      console.log(pc.green(`  ✔ ${f.name}`))
+    })
+    disabledFeatures.forEach(f => {
+      console.log(pc.dim(`  ✘ ${f.name}`))
     })
   }
 

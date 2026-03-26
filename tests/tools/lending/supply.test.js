@@ -18,9 +18,7 @@ describe('supply', () => {
       wdk: {
         getAccount: jest.fn()
       },
-      server: {
-        elicitInput: jest.fn()
-      }
+      requestConfirmation: jest.fn()
     }
   })
 
@@ -82,7 +80,7 @@ describe('supply', () => {
     })
 
     describe('confirmation flow', () => {
-      test('should call server.server.elicitInput with confirmation message', async () => {
+      test('should call server.requestConfirmation with confirmation message', async () => {
         const quoteSupplyMock = jest.fn().mockResolvedValue({
           fee: 21000000000000n
         })
@@ -97,7 +95,7 @@ describe('supply', () => {
 
         server.getTokenInfo.mockReturnValue(USDT_INFO)
         server.wdk.getAccount.mockResolvedValue(accountMock)
-        server.server.elicitInput.mockResolvedValue({ action: 'decline' })
+        server.requestConfirmation.mockResolvedValue({ action: 'decline' })
 
         await handler({
           chain: 'ethereum',
@@ -105,10 +103,19 @@ describe('supply', () => {
           amount: '100'
         })
 
-        expect(server.server.elicitInput).toHaveBeenCalledWith(
-          expect.objectContaining({
-            message: expect.stringContaining('SUPPLY CONFIRMATION REQUIRED')
-          })
+        expect(server.requestConfirmation).toHaveBeenCalledWith(
+          `⚠️  SUPPLY CONFIRMATION REQUIRED\n\nProtocol: aave\nChain: ethereum\nToken: USDT\nAmount: 100\nRecipient (aTokens): ${WALLET_ADDRESS}\nEstimated Fee: 21000000000000\n\nYou will receive aTokens representing your deposit. This transaction is IRREVERSIBLE once broadcast.\n\nDo you want to proceed with this supply?`,
+          {
+            type: 'object',
+            properties: {
+              confirmed: {
+                type: 'boolean',
+                title: 'Confirm Supply',
+                description: 'Check to confirm and execute supply'
+              }
+            },
+            required: ['confirmed']
+          }
         )
       })
 
@@ -127,7 +134,7 @@ describe('supply', () => {
 
         server.getTokenInfo.mockReturnValue(USDT_INFO)
         server.wdk.getAccount.mockResolvedValue(accountMock)
-        server.server.elicitInput.mockResolvedValue({ action: 'accept', content: { confirmed: false } })
+        server.requestConfirmation.mockResolvedValue({ action: 'accept', content: { confirmed: false } })
 
         const result = await handler({
           chain: 'ethereum',
@@ -153,7 +160,7 @@ describe('supply', () => {
 
         server.getTokenInfo.mockReturnValue(USDT_INFO)
         server.wdk.getAccount.mockResolvedValue(accountMock)
-        server.server.elicitInput.mockResolvedValue({ action: 'decline' })
+        server.requestConfirmation.mockResolvedValue({ action: 'decline' })
 
         const result = await handler({
           chain: 'ethereum',
@@ -182,7 +189,7 @@ describe('supply', () => {
 
         server.getTokenInfo.mockReturnValue(USDT_INFO)
         server.wdk.getAccount.mockResolvedValue(accountMock)
-        server.server.elicitInput.mockResolvedValue({ action: 'accept', content: { confirmed: true } })
+        server.requestConfirmation.mockResolvedValue({ action: 'accept', content: { confirmed: true } })
 
         await handler({
           chain: 'ethereum',
@@ -190,7 +197,11 @@ describe('supply', () => {
           amount: '100'
         })
 
-        expect(supplyMock).toHaveBeenCalled()
+        expect(supplyMock).toHaveBeenCalledWith({
+          token: USDT_INFO.address,
+          amount: 100000000n,
+          onBehalfOf: WALLET_ADDRESS
+        })
       })
 
       test('should return hash in result', async () => {
@@ -209,7 +220,7 @@ describe('supply', () => {
 
         server.getTokenInfo.mockReturnValue(USDT_INFO)
         server.wdk.getAccount.mockResolvedValue(accountMock)
-        server.server.elicitInput.mockResolvedValue({ action: 'accept', content: { confirmed: true } })
+        server.requestConfirmation.mockResolvedValue({ action: 'accept', content: { confirmed: true } })
 
         const result = await handler({
           chain: 'ethereum',

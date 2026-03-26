@@ -16,9 +16,7 @@ describe('sendTransaction', () => {
       wdk: {
         getAccount: jest.fn()
       },
-      server: {
-        elicitInput: jest.fn()
-      }
+      requestConfirmation: jest.fn()
     }
   })
 
@@ -30,7 +28,7 @@ describe('sendTransaction', () => {
       sendTransaction: sendTransactionMock
     }
     server.wdk.getAccount.mockResolvedValue(accountMock)
-    server.server.elicitInput.mockResolvedValue(overrides.elicit ?? { action: 'accept', content: { confirmed: true } })
+    server.requestConfirmation.mockResolvedValue(overrides.elicit ?? { action: 'accept', content: { confirmed: true } })
     return { quoteSendTransactionMock, sendTransactionMock, accountMock }
   }
 
@@ -61,7 +59,7 @@ describe('sendTransaction', () => {
         })
 
         expect(result.isError).toBe(true)
-        expect(result.content[0].text).toContain('Amount must be greater than zero')
+        expect(result.content[0].text).toBe('Error sending transaction on bitcoin: Amount must be greater than zero')
         expect(result.structuredContent).toBeUndefined()
       })
 
@@ -73,7 +71,7 @@ describe('sendTransaction', () => {
         })
 
         expect(result.isError).toBe(true)
-        expect(result.content[0].text).toContain('Amount must be greater than zero')
+        expect(result.content[0].text).toBe('Error sending transaction on bitcoin: Amount must be greater than zero')
         expect(result.structuredContent).toBeUndefined()
       })
     })
@@ -132,13 +130,20 @@ describe('sendTransaction', () => {
           value: '100000'
         })
 
-        expect(server.server.elicitInput).toHaveBeenCalledWith(
-          expect.objectContaining({
-            message: expect.stringContaining('TRANSACTION CONFIRMATION')
-          })
+        expect(server.requestConfirmation).toHaveBeenCalledWith(
+          '⚠️  TRANSACTION CONFIRMATION REQUIRED\n\nTo: bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh\nAmount: 100000\nEstimated Fee: 5000\nTotal: 105000\n\nThis transaction is IRREVERSIBLE once broadcast to the bitcoin network.\n\nDo you want to proceed with this transaction?',
+          {
+            type: 'object',
+            properties: {
+              confirmed: {
+                type: 'boolean',
+                title: 'Confirm Transaction',
+                description: 'Check to confirm and send transaction'
+              }
+            },
+            required: ['confirmed']
+          }
         )
-        expect(server.server.elicitInput.mock.calls[0][0].message).toContain('100000')
-        expect(server.server.elicitInput.mock.calls[0][0].message).toContain('bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh')
       })
 
       test('should return cancelled message if user declines', async () => {

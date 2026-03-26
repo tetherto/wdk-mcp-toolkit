@@ -16,7 +16,7 @@
 
 /** @typedef {import('./src/server.js').TokenInfo} TokenInfo */
 
-/** @typedef {import('./src/server.js').IndexerConfig} IndexerConfig */
+/** @typedef {import('./src/server.js').WdkIndexerConfig} WdkIndexerConfig */
 
 /** @typedef {import('./src/server.js').WdkConfig} WdkConfig */
 
@@ -25,6 +25,12 @@
 /** @typedef {import('./src/server.js').TokenRegistry} TokenRegistry */
 
 /** @typedef {import('./src/server.js').ToolFunction} ToolFunction */
+
+/** @typedef {import('./src/server.js').Capabilities} Capabilities */
+
+/** @typedef {import('./src/server.js').ServerOptions} ServerOptions */
+
+/** @typedef {import('./src/server.js').ConfirmationResult} ConfirmationResult */
 
 export { WdkMcpServer, CHAINS, DEFAULT_TOKENS } from './src/server.js'
 

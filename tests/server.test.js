@@ -2,12 +2,21 @@
 
 import { beforeEach, describe, expect, jest, test } from '@jest/globals'
 
-import WDK from '@tetherto/wdk'
-import { SwapProtocol, BridgeProtocol, LendingProtocol, FiatProtocol } from '@tetherto/wdk-wallet/protocols'
-import { BitfinexPricingClient } from '@tetherto/wdk-pricing-bitfinex-http'
-import { WdkIndexerClient } from '@tetherto/wdk-indexer-http'
+jest.unstable_mockModule('@tetherto/wdk', () => ({
+  default: jest.fn().mockImplementation(() => ({
+    registerWallet: jest.fn(),
+    registerProtocol: jest.fn(),
+    dispose: jest.fn(),
+    getAccount: jest.fn()
+  }))
+}))
 
-import { WdkMcpServer, DEFAULT_TOKENS, CHAINS } from '../src/server.js'
+const { default: WDK } = await import('@tetherto/wdk')
+const { SwapProtocol, BridgeProtocol, LendingProtocol, FiatProtocol } = await import('@tetherto/wdk-wallet/protocols')
+const { BitfinexPricingClient } = await import('@tetherto/wdk-pricing-bitfinex-http')
+const { WdkIndexerClient } = await import('@tetherto/wdk-indexer-http')
+
+const { WdkMcpServer, DEFAULT_TOKENS, CHAINS } = await import('../src/server.js')
 
 const SEED_PHRASE = 'cook voyage document eight skate token alien guide drink uncle term abuse'
 
@@ -15,6 +24,7 @@ describe('WdkMcpServer', () => {
   let server
 
   beforeEach(() => {
+    WDK.mockClear()
     server = new WdkMcpServer('test-server', '1.0.0')
   })
 
@@ -48,7 +58,7 @@ describe('WdkMcpServer', () => {
     test('should create WDK instance with provided seed', () => {
       server.useWdk({ seed: SEED_PHRASE })
 
-      expect(server.wdk).toBeInstanceOf(WDK)
+      expect(WDK).toHaveBeenCalledWith(SEED_PHRASE)
     })
 
     test('should create WDK instance with WDK_SEED env variable', () => {
@@ -57,7 +67,7 @@ describe('WdkMcpServer', () => {
 
       server.useWdk({})
 
-      expect(server.wdk).toBeInstanceOf(WDK)
+      expect(WDK).toHaveBeenCalledWith(SEED_PHRASE)
 
       process.env.WDK_SEED = originalEnv
     })
@@ -118,7 +128,7 @@ describe('WdkMcpServer', () => {
     })
 
     test('should return registered chain names', () => {
-      server._wdk = { registerWallet: jest.fn() }
+      server.useWdk({ seed: SEED_PHRASE })
       server.registerWallet('ethereum', jest.fn(), {})
       server.registerWallet('bitcoin', jest.fn(), {})
 
@@ -204,7 +214,7 @@ describe('WdkMcpServer', () => {
     const CONFIG = { provider: 'https://eth.drpc.org' }
 
     test('should add blockchain to chains registry', () => {
-      server._wdk = { registerWallet: jest.fn() }
+      server.useWdk({ seed: SEED_PHRASE })
 
       server.registerWallet('ethereum', WalletManagerMock, CONFIG)
 
@@ -212,7 +222,7 @@ describe('WdkMcpServer', () => {
     })
 
     test('should register default tokens for known chains', () => {
-      server._wdk = { registerWallet: jest.fn() }
+      server.useWdk({ seed: SEED_PHRASE })
       const registerTokenSpy = jest.spyOn(server, 'registerToken')
 
       server.registerWallet('ethereum', WalletManagerMock, CONFIG)
@@ -222,7 +232,7 @@ describe('WdkMcpServer', () => {
     })
 
     test('should not register tokens for unknown chains', () => {
-      server._wdk = { registerWallet: jest.fn() }
+      server.useWdk({ seed: SEED_PHRASE })
       const registerTokenSpy = jest.spyOn(server, 'registerToken')
 
       server.registerWallet('customchain', WalletManagerMock, CONFIG)
@@ -236,7 +246,7 @@ describe('WdkMcpServer', () => {
     })
 
     test('should return server instance for chaining', () => {
-      server._wdk = { registerWallet: jest.fn() }
+      server.useWdk({ seed: SEED_PHRASE })
 
       const result = server.registerWallet('ethereum', WalletManagerMock, CONFIG)
 
@@ -262,7 +272,7 @@ describe('WdkMcpServer', () => {
       FiatProtocolMock = jest.fn()
       Object.setPrototypeOf(FiatProtocolMock.prototype, FiatProtocol.prototype)
 
-      server._wdk = { registerProtocol: jest.fn() }
+      server.useWdk({ seed: SEED_PHRASE })
     })
 
     test('should add swap protocol to swap registry', () => {
@@ -320,7 +330,7 @@ describe('WdkMcpServer', () => {
     })
 
     test('should return chains with swap protocols', () => {
-      server._wdk = { registerProtocol: jest.fn() }
+      server.useWdk({ seed: SEED_PHRASE })
       const SwapMock = jest.fn()
       Object.setPrototypeOf(SwapMock.prototype, SwapProtocol.prototype)
       server.registerProtocol('ethereum', 'velora', SwapMock, {})
@@ -331,7 +341,7 @@ describe('WdkMcpServer', () => {
 
   describe('getSwapProtocols', () => {
     test('should return protocol labels for chain', () => {
-      server._wdk = { registerProtocol: jest.fn() }
+      server.useWdk({ seed: SEED_PHRASE })
       const SwapMock = jest.fn()
       Object.setPrototypeOf(SwapMock.prototype, SwapProtocol.prototype)
       server.registerProtocol('ethereum', 'velora', SwapMock, {})
@@ -353,7 +363,7 @@ describe('WdkMcpServer', () => {
     })
 
     test('should return chains with bridge protocols', () => {
-      server._wdk = { registerProtocol: jest.fn() }
+      server.useWdk({ seed: SEED_PHRASE })
       const BridgeMock = jest.fn()
       Object.setPrototypeOf(BridgeMock.prototype, BridgeProtocol.prototype)
       server.registerProtocol('ethereum', 'usdt0', BridgeMock, {})
@@ -364,7 +374,7 @@ describe('WdkMcpServer', () => {
 
   describe('getBridgeProtocols', () => {
     test('should return protocol labels for chain', () => {
-      server._wdk = { registerProtocol: jest.fn() }
+      server.useWdk({ seed: SEED_PHRASE })
       const BridgeMock = jest.fn()
       Object.setPrototypeOf(BridgeMock.prototype, BridgeProtocol.prototype)
       server.registerProtocol('ethereum', 'usdt0', BridgeMock, {})
@@ -383,7 +393,7 @@ describe('WdkMcpServer', () => {
     })
 
     test('should return chains with lending protocols', () => {
-      server._wdk = { registerProtocol: jest.fn() }
+      server.useWdk({ seed: SEED_PHRASE })
       const LendingMock = jest.fn()
       Object.setPrototypeOf(LendingMock.prototype, LendingProtocol.prototype)
       server.registerProtocol('ethereum', 'aave', LendingMock, {})
@@ -394,7 +404,7 @@ describe('WdkMcpServer', () => {
 
   describe('getLendingProtocols', () => {
     test('should return protocol labels for chain', () => {
-      server._wdk = { registerProtocol: jest.fn() }
+      server.useWdk({ seed: SEED_PHRASE })
       const LendingMock = jest.fn()
       Object.setPrototypeOf(LendingMock.prototype, LendingProtocol.prototype)
       server.registerProtocol('ethereum', 'aave', LendingMock, {})
@@ -413,7 +423,7 @@ describe('WdkMcpServer', () => {
     })
 
     test('should return chains with fiat protocols', () => {
-      server._wdk = { registerProtocol: jest.fn() }
+      server.useWdk({ seed: SEED_PHRASE })
       const FiatMock = jest.fn()
       Object.setPrototypeOf(FiatMock.prototype, FiatProtocol.prototype)
       server.registerProtocol('ethereum', 'moonpay', FiatMock, {})
@@ -424,7 +434,7 @@ describe('WdkMcpServer', () => {
 
   describe('getFiatProtocols', () => {
     test('should return protocol labels for chain', () => {
-      server._wdk = { registerProtocol: jest.fn() }
+      server.useWdk({ seed: SEED_PHRASE })
       const FiatMock = jest.fn()
       Object.setPrototypeOf(FiatMock.prototype, FiatProtocol.prototype)
       server.registerProtocol('ethereum', 'moonpay', FiatMock, {})
@@ -437,18 +447,72 @@ describe('WdkMcpServer', () => {
     })
   })
 
+  describe('capabilities', () => {
+    test('should default elicitation to true when no options provided', () => {
+      expect(server.capabilities).toEqual({ elicitation: true })
+    })
+
+    test('should accept capabilities in constructor options', () => {
+      const serverWithOptions = new WdkMcpServer('test', '1.0.0', {
+        capabilities: { elicitation: false }
+      })
+
+      expect(serverWithOptions.capabilities).toEqual({ elicitation: false })
+    })
+  })
+
+  describe('requestConfirmation', () => {
+    const message = 'Confirm this action?'
+    const schema = {
+      type: 'object',
+      properties: {
+        confirmed: { type: 'boolean', title: 'Confirm' }
+      },
+      required: ['confirmed']
+    }
+
+    test('should call server.elicitInput when elicitation is enabled', async () => {
+      const elicitInputMock = jest.fn().mockResolvedValue({
+        action: 'accept',
+        content: { confirmed: true }
+      })
+      server.server = { elicitInput: elicitInputMock }
+
+      const result = await server.requestConfirmation(message, schema)
+
+      expect(elicitInputMock).toHaveBeenCalledWith({
+        message,
+        requestedSchema: schema
+      })
+      expect(result).toEqual({ action: 'accept', content: { confirmed: true } })
+    })
+
+    test('should auto-confirm when elicitation is disabled', async () => {
+      const serverNoElicit = new WdkMcpServer('test', '1.0.0', {
+        capabilities: { elicitation: false }
+      })
+      const elicitInputMock = jest.fn()
+      serverNoElicit.server = { elicitInput: elicitInputMock }
+
+      const result = await serverNoElicit.requestConfirmation(message, schema)
+
+      expect(elicitInputMock).not.toHaveBeenCalled()
+      expect(result).toEqual({ action: 'accept', content: { confirmed: true } })
+    })
+  })
+
   describe('close', () => {
     test('should not throw if wdk is null', async () => {
       await expect(server.close()).resolves.not.toThrow()
     })
 
     test('should call wdk.dispose when wdk exists', async () => {
-      const disposeMock = jest.fn()
-      server._wdk = { dispose: disposeMock }
+      server.useWdk({ seed: SEED_PHRASE })
 
       await server.close()
 
-      expect(disposeMock).toHaveBeenCalled()
+      const wdkInstance = WDK.mock.results[0].value
+      expect(wdkInstance.dispose).toHaveBeenCalled()
     })
   })
 })

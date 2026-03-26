@@ -18,9 +18,7 @@ describe('repay', () => {
       wdk: {
         getAccount: jest.fn()
       },
-      server: {
-        elicitInput: jest.fn()
-      }
+      requestConfirmation: jest.fn()
     }
   })
 
@@ -95,7 +93,7 @@ describe('repay', () => {
 
         server.getTokenInfo.mockReturnValue(USDT_INFO)
         server.wdk.getAccount.mockResolvedValue(accountMock)
-        server.server.elicitInput.mockResolvedValue({ action: 'accept', content: { confirmed: true } })
+        server.requestConfirmation.mockResolvedValue({ action: 'accept', content: { confirmed: true } })
 
         await handler({
           chain: 'ethereum',
@@ -126,7 +124,7 @@ describe('repay', () => {
 
         server.getTokenInfo.mockReturnValue(USDT_INFO)
         server.wdk.getAccount.mockResolvedValue(accountMock)
-        server.server.elicitInput.mockResolvedValue({ action: 'accept', content: { confirmed: true } })
+        server.requestConfirmation.mockResolvedValue({ action: 'accept', content: { confirmed: true } })
 
         await handler({
           chain: 'ethereum',
@@ -153,7 +151,7 @@ describe('repay', () => {
 
         server.getTokenInfo.mockReturnValue(USDT_INFO)
         server.wdk.getAccount.mockResolvedValue(accountMock)
-        server.server.elicitInput.mockResolvedValue({ action: 'accept', content: { confirmed: true } })
+        server.requestConfirmation.mockResolvedValue({ action: 'accept', content: { confirmed: true } })
 
         await handler({
           chain: 'ethereum',
@@ -178,7 +176,7 @@ describe('repay', () => {
 
         server.getTokenInfo.mockReturnValue(USDT_INFO)
         server.wdk.getAccount.mockResolvedValue(accountMock)
-        server.server.elicitInput.mockResolvedValue({ action: 'accept', content: { confirmed: true } })
+        server.requestConfirmation.mockResolvedValue({ action: 'accept', content: { confirmed: true } })
 
         await handler({
           chain: 'ethereum',
@@ -209,7 +207,7 @@ describe('repay', () => {
 
         server.getTokenInfo.mockReturnValue(USDT_INFO)
         server.wdk.getAccount.mockResolvedValue(accountMock)
-        server.server.elicitInput.mockResolvedValue({ action: 'accept', content: { confirmed: true } })
+        server.requestConfirmation.mockResolvedValue({ action: 'accept', content: { confirmed: true } })
 
         await handler({
           chain: 'ethereum',
@@ -217,10 +215,19 @@ describe('repay', () => {
           amount: '100'
         })
 
-        expect(server.server.elicitInput).toHaveBeenCalledWith(
-          expect.objectContaining({
-            message: expect.stringContaining('REPAY CONFIRMATION')
-          })
+        expect(server.requestConfirmation).toHaveBeenCalledWith(
+          `⚠️  REPAY CONFIRMATION REQUIRED\n\nProtocol: aave\nChain: ethereum\nToken: USDT\nAmount: 100\nRepaying for: 0x123\nEstimated Fee: 21000000000000\n\nThis will reduce your debt and improve your health factor. This transaction is IRREVERSIBLE once broadcast.\n\nDo you want to proceed with this repayment?`,
+          {
+            type: 'object',
+            properties: {
+              confirmed: {
+                type: 'boolean',
+                title: 'Confirm Repay',
+                description: 'Check to confirm and execute repayment'
+              }
+            },
+            required: ['confirmed']
+          }
         )
       })
 
@@ -237,7 +244,7 @@ describe('repay', () => {
 
         server.getTokenInfo.mockReturnValue(USDT_INFO)
         server.wdk.getAccount.mockResolvedValue(accountMock)
-        server.server.elicitInput.mockResolvedValue({ action: 'reject' })
+        server.requestConfirmation.mockResolvedValue({ action: 'reject' })
 
         const result = await handler({
           chain: 'ethereum',
@@ -264,7 +271,7 @@ describe('repay', () => {
 
         server.getTokenInfo.mockReturnValue(USDT_INFO)
         server.wdk.getAccount.mockResolvedValue(accountMock)
-        server.server.elicitInput.mockResolvedValue({ action: 'accept', content: { confirmed: true } })
+        server.requestConfirmation.mockResolvedValue({ action: 'accept', content: { confirmed: true } })
 
         const result = await handler({
           chain: 'ethereum',
@@ -291,7 +298,7 @@ describe('repay', () => {
 
         server.getTokenInfo.mockReturnValue(USDT_INFO)
         server.wdk.getAccount.mockResolvedValue(accountMock)
-        server.server.elicitInput.mockResolvedValue({ action: 'accept', content: { confirmed: true } })
+        server.requestConfirmation.mockResolvedValue({ action: 'accept', content: { confirmed: true } })
 
         const result = await handler({
           chain: 'ethereum',

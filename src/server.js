@@ -19,6 +19,7 @@ import { SwapProtocol, BridgeProtocol, LendingProtocol, FiatProtocol } from '@te
 import { BitfinexPricingClient } from '@tetherto/wdk-pricing-bitfinex-http'
 import { WdkIndexerClient } from '@tetherto/wdk-indexer-http'
 
+/** @typedef {import('@modelcontextprotocol/sdk/types.js').ElicitRequestFormParams} ElicitRequestFormParams */
 /** @typedef {import('@tetherto/wdk-indexer-http').WdkIndexerConfig} WdkIndexerConfig */
 /** @typedef {typeof import('@tetherto/wdk-wallet').default} WalletManager */
 
@@ -34,6 +35,16 @@ import { WdkIndexerClient } from '@tetherto/wdk-indexer-http'
  */
 
 /**
+ * @typedef {Object} Capabilities
+ * @property {boolean} [elicitation] - Whether the MCP client supports elicitation (default: true).
+ */
+
+/**
+ * @typedef {Object} ServerOptions
+ * @property {Capabilities} [capabilities] - MCP client capabilities.
+ */
+
+/**
  * @typedef {Object} ProtocolRegistry
  * @property {Map<string, Set<string>>} swap - Chain to labels mapping for swap protocols.
  * @property {Map<string, Set<string>>} bridge - Chain to labels mapping for bridge protocols.
@@ -46,6 +57,13 @@ import { WdkIndexerClient } from '@tetherto/wdk-indexer-http'
 /** @typedef {Map<string, TokenMap>} TokenRegistry */
 
 /** @typedef {(server: WdkMcpServer) => void} ToolFunction */
+
+/**
+ * @typedef {Object} ConfirmationResult
+ * @property {string} action - The confirmation action (e.g., "accept", "decline").
+ * @property {Object} [content] - The confirmation content.
+ * @property {boolean} [content.confirmed] - Whether the confirmation has been actually confirmed.
+ */
 
 /**
  * Supported blockchain identifiers.
@@ -118,8 +136,9 @@ export class WdkMcpServer extends McpServer {
    *
    * @param {string} name - The server name.
    * @param {string} version - The server version.
+   * @param {ServerOptions} [options] - Server options including MCP client capabilities.
    */
-  constructor (name, version) {
+  constructor (name, version, options = {}) {
     super({ name, version })
 
     /**
@@ -174,6 +193,17 @@ export class WdkMcpServer extends McpServer {
       lending: new Map(),
       fiat: new Map()
     }
+
+    /**
+     * MCP client capabilities configuration.
+     *
+     * @private
+     * @type {Capabilities}
+     */
+    this._capabilities = {
+      elicitation: true,
+      ...options.capabilities
+    }
   }
 
   /**
@@ -210,6 +240,36 @@ export class WdkMcpServer extends McpServer {
    */
   get pricingClient () {
     return this._pricingClient
+  }
+
+  /**
+   * The MCP client capabilities.
+   *
+   * @type {Capabilities}
+   */
+  get capabilities () {
+    return { ...this._capabilities }
+  }
+
+  /**
+   * Requests user confirmation for a destructive operation.
+   *
+   * If elicitation is enabled, presents a confirmation dialog via the MCP client.
+   * If elicitation is disabled, auto-confirms the operation.
+   *
+   * @param {string} message - The confirmation message to display.
+   * @param {ElicitRequestFormParams['requestedSchema']} schema - The JSON Schema for the confirmation form.
+   * @returns {Promise<ConfirmationResult>} The confirmation result.
+   */
+  async requestConfirmation (message, schema) {
+    if (!this._capabilities.elicitation) {
+      return { action: 'accept', content: { confirmed: true } }
+    }
+
+    return this.server.elicitInput({
+      message,
+      requestedSchema: schema
+    })
   }
 
   /**

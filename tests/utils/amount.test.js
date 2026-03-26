@@ -66,8 +66,7 @@ describe('parseAmountToBaseUnits', () => {
     })
 
     test('throws on precision overflow', () => {
-      expect(() => parseAmountToBaseUnits('1e-7', 6)).toThrow(AmountParseError)
-      expect(() => parseAmountToBaseUnits('1e-7', 6)).toThrow(/only supports 6/)
+      expect(() => parseAmountToBaseUnits('1e-7', 6)).toThrow(new AmountParseError('Scientific notation "1e-7" expands to 7 decimal places, but token only supports 6.'))
     })
   })
 
@@ -84,7 +83,7 @@ describe('parseAmountToBaseUnits', () => {
 
   describe('error cases', () => {
     test('throws on negative amounts', () => {
-      expect(() => parseAmountToBaseUnits('-1.5', 6)).toThrow(AmountParseError)
+      expect(() => parseAmountToBaseUnits('-1.5', 6)).toThrow(new AmountParseError('Negative amounts are not allowed: "-1.5".'))
       try {
         parseAmountToBaseUnits('-1', 6)
       } catch (e) {
@@ -95,13 +94,13 @@ describe('parseAmountToBaseUnits', () => {
     test('throws on invalid format', () => {
       const invalidInputs = ['1.2.3', 'abc', '$100', '100 USDT', '.5', '5.']
       invalidInputs.forEach(input => {
-        expect(() => parseAmountToBaseUnits(input, 6)).toThrow(AmountParseError)
+        expect(() => parseAmountToBaseUnits(input, 6)).toThrow(new AmountParseError(`Invalid amount format: "${input}". Expected a positive number (e.g., "100", "2.50", "1,000.00").`))
       })
     })
 
     test('throws on empty input', () => {
-      expect(() => parseAmountToBaseUnits('', 6)).toThrow(AmountParseError)
-      expect(() => parseAmountToBaseUnits('   ', 6)).toThrow(AmountParseError)
+      expect(() => parseAmountToBaseUnits('', 6)).toThrow(new AmountParseError('Amount cannot be empty.'))
+      expect(() => parseAmountToBaseUnits('   ', 6)).toThrow(new AmountParseError('Amount cannot be empty.'))
       try {
         parseAmountToBaseUnits('', 6)
       } catch (e) {
@@ -110,7 +109,7 @@ describe('parseAmountToBaseUnits', () => {
     })
 
     test('throws on excessive precision', () => {
-      expect(() => parseAmountToBaseUnits('1.0000001', 6)).toThrow(AmountParseError)
+      expect(() => parseAmountToBaseUnits('1.0000001', 6)).toThrow(new AmountParseError('Amount "1.0000001" has 7 decimal places, but token only supports 6. Please reduce precision to avoid unintended rounding.'))
       try {
         parseAmountToBaseUnits('1.0000001', 6)
       } catch (e) {
@@ -119,9 +118,9 @@ describe('parseAmountToBaseUnits', () => {
     })
 
     test('throws on invalid decimals parameter', () => {
-      expect(() => parseAmountToBaseUnits('100', -1)).toThrow(AmountParseError)
-      expect(() => parseAmountToBaseUnits('100', 6.5)).toThrow(AmountParseError)
-      expect(() => parseAmountToBaseUnits('100', 78)).toThrow(AmountParseError)
+      expect(() => parseAmountToBaseUnits('100', -1)).toThrow(new AmountParseError('Invalid decimals value: -1. Must be a non-negative integer <= 77.'))
+      expect(() => parseAmountToBaseUnits('100', 6.5)).toThrow(new AmountParseError('Invalid decimals value: 6.5. Must be a non-negative integer <= 77.'))
+      expect(() => parseAmountToBaseUnits('100', 78)).toThrow(new AmountParseError('Invalid decimals value: 78. Must be a non-negative integer <= 77.'))
     })
   })
 })
@@ -146,8 +145,8 @@ describe('formatBaseUnitsToAmount', () => {
   })
 
   test('throws on invalid input', () => {
-    expect(() => formatBaseUnitsToAmount('100', 6)).toThrow(AmountParseError)
-    expect(() => formatBaseUnitsToAmount(-1n, 6)).toThrow(AmountParseError)
+    expect(() => formatBaseUnitsToAmount('100', 6)).toThrow(new AmountParseError('baseUnits must be a BigInt, received string.'))
+    expect(() => formatBaseUnitsToAmount(-1n, 6)).toThrow(new AmountParseError('Negative base units are not supported.'))
   })
 })
 

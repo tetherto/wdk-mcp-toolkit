@@ -204,7 +204,7 @@ describe('getTransactionDetail', () => {
         })
 
         expect(result.content[0].type).toBe('text')
-        expect(result.content[0].text).toContain('moonpay')
+        expect(result.structuredContent).toEqual({ protocol: 'moonpay', txId: 'tx123', status: 'completed', cryptoAsset: 'eth', fiatCurrency: 'USD' })
       })
     })
 
