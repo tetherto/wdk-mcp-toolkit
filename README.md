@@ -377,6 +377,153 @@ The server conditionally enables capabilities based on which environment variabl
 
 Re-run `npm run setup` to change your configuration or enable additional capabilities.
 
+## 🔗 Using with LangChain
+
+You can use WDK MCP Toolkit as a tool provider for [LangChain](https://www.langchain.com/) agents in both **Python** and **TypeScript**. The `serve` CLI command starts a fully configured MCP server on stdio — no server script required. LangChain's `MultiServerMCPClient` spawns it as a subprocess and converts WDK tools into LangChain-compatible tools.
+
+### Quick Start (Python)
+
+```bash
+pip install langchain-mcp-adapters langgraph langchain-openai
+```
+
+```python
+import asyncio
+from langchain_mcp_adapters.client import MultiServerMCPClient
+from langgraph.prebuilt import create_react_agent
+from langchain_openai import ChatOpenAI
+
+async def main():
+    client = MultiServerMCPClient({
+        "wdk": {
+            "transport": "stdio",
+            "command": "npx",
+            "args": ["-y", "@tetherto/wdk-mcp-toolkit", "serve"],
+            "env": {
+                "WDK_SEED": "your twelve word seed phrase here",
+                "WDK_MCP_ELICITATION": "false",
+            },
+        }
+    })
+
+    tools = await client.get_tools()
+    agent = create_react_agent(ChatOpenAI(model="gpt-4o"), tools)
+
+    result = await agent.ainvoke({
+        "messages": [{"role": "user", "content": "What is my Ethereum address?"}]
+    })
+    print(result["messages"][-1].content)
+
+asyncio.run(main())
+```
+
+### Quick Start (TypeScript)
+
+```bash
+npm install @langchain/mcp-adapters @langchain/langgraph @langchain/core @langchain/openai
+```
+
+```typescript
+import { MultiServerMCPClient } from "@langchain/mcp-adapters";
+import { createReactAgent } from "@langchain/langgraph/prebuilt";
+import { ChatOpenAI } from "@langchain/openai";
+
+const client = new MultiServerMCPClient({
+  wdk: {
+    transport: "stdio",
+    command: "npx",
+    args: ["-y", "@tetherto/wdk-mcp-toolkit", "serve"],
+    env: {
+      WDK_SEED: "your twelve word seed phrase here",
+      WDK_MCP_ELICITATION: "false",
+    },
+  },
+});
+
+const tools = await client.getTools();
+const agent = createReactAgent({
+  llm: new ChatOpenAI({ model: "gpt-4o" }),
+  tools,
+});
+
+const result = await agent.invoke({
+  messages: [
+    { role: "user", content: "What is the current price of Bitcoin?" },
+  ],
+});
+
+await client.close();
+```
+
+### The `serve` Command
+
+The `serve` command auto-discovers installed wallet and protocol modules, so you don't need to write a server script:
+
+```bash
+# Start with wallet operations
+WDK_SEED="..." npx @tetherto/wdk-mcp-toolkit serve
+
+# Start without seed (pricing tools only)
+npx @tetherto/wdk-mcp-toolkit serve
+```
+
+It automatically detects and registers:
+
+| Module | Auto-registers |
+|--------|----------------|
+| `@tetherto/wdk-wallet-evm` | Ethereum + Arbitrum wallets |
+| `@tetherto/wdk-wallet-btc` | Bitcoin wallet |
+| `@tetherto/wdk-protocol-swap-velora-evm` | Swap tools |
+| `@tetherto/wdk-protocol-bridge-usdt0-evm` | Bridge tools |
+| `@tetherto/wdk-protocol-lending-aave-evm` | Lending tools |
+| `@tetherto/wdk-protocol-fiat-moonpay` | Fiat tools (requires `MOONPAY_*` env vars) |
+
+Override any chain's RPC endpoint with `WDK_RPC_<CHAIN_UPPERCASE>` (e.g. `WDK_RPC_ETHEREUM=https://my-rpc.com`).
+
+**Custom chains and protocols** — for chains or protocols not in the defaults, create a `wdk.config.json` and pass its path via `WDK_CONFIG`:
+
+```bash
+WDK_CONFIG=./wdk.config.json WDK_SEED="..." npx @tetherto/wdk-mcp-toolkit serve
+```
+
+```json
+{
+  "chains": {
+    "zksync": {
+      "module": "@myorg/wdk-wallet-zksync",
+      "config": { "provider": "https://mainnet.era.zksync.io" }
+    },
+    "ethereum": {
+      "config": { "provider": "https://my-private-rpc.com" }
+    }
+  },
+  "protocols": [
+    {
+      "module": "@myorg/wdk-protocol-swap-custom",
+      "label": "custom-swap",
+      "type": "swap",
+      "chains": ["zksync"]
+    }
+  ],
+  "enabledChains": ["ethereum", "zksync", "bitcoin"]
+}
+```
+
+- `chains` — add new chains or override config for built-in ones. New chains require a `module` field; overrides for existing chains can omit it.
+- `protocols` — add custom protocols. Each requires `module`, `label`, and `chains`. The `type` field (`swap`, `bridge`, `lending`, `fiat`) maps to the corresponding built-in tool set.
+- `enabledChains` — overrides `WDK_CHAINS` env var. If omitted, `WDK_CHAINS` is used (default: `ethereum,arbitrum,bitcoin`).
+
+### LLM Provider Support
+
+Both examples support OpenAI and Anthropic — set the corresponding environment variable:
+
+| Provider | Environment Variable | Python Package | TypeScript Package |
+|----------|---------------------|---------------|--------------------|
+| OpenAI | `OPENAI_API_KEY` | `langchain-openai` | `@langchain/openai` |
+| Anthropic | `ANTHROPIC_API_KEY` | `langchain-anthropic` | `@langchain/anthropic` |
+
+> **📁 Examples:** See [`examples/langchain/python/`](examples/langchain/python/) and [`examples/langchain/typescript/`](examples/langchain/typescript/) for complete interactive agent examples.
+
 ## 📚 API Reference
 
 ### Table of Contents
