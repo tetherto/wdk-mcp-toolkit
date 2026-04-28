@@ -46,7 +46,6 @@
   "standard": {
     "ignore": [
       "types/**/*.d.ts",
-      "examples/**/*.js",
       "tests/**/*.js"
     ]
   },
