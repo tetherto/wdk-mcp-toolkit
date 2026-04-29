@@ -60,6 +60,9 @@
     "picocolors": "^1.1.0",
     "zod": "^3.24.0"
   },
+  "overrides": {
+    "axios": "^1.15.0"
+  },
   "devDependencies": {
     "@tetherto/wdk-wallet-btc": "^1.0.0-beta.6",
     "@tetherto/wdk-wallet-evm": "^1.0.0-beta.8",
