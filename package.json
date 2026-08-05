@@ -57,7 +57,7 @@
   },
   "dependencies": {
     "@inquirer/prompts": "7.10.1",
-    "@modelcontextprotocol/sdk": "1.29.0",
+    "@modelcontextprotocol/sdk": "1.30.0",
     "@tetherto/wdk": "1.0.0-beta.10",
     "@tetherto/wdk-indexer-http": "github:tetherto/wdk-indexer-http#fbde10bae408d546647ad6e6b8dcfaf8f0e6f103",
     "@tetherto/wdk-pricing-bitfinex-http": "1.0.0-beta.3",
