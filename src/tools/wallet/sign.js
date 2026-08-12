@@ -33,14 +33,13 @@ export function sign (server) {
       description: `Sign a message using the wallet's private key.
 
 This tool signs an arbitrary message using the wallet's private key, producing a cryptographic signature that can be verified later. The signature proves ownership of the wallet without revealing the private key.
-
 Args:
   - chain (REQUIRED): The blockchain to use for signing
   - message (REQUIRED): The message to sign (string)
 
 Returns:
   Text format: "Message signed. Signature: {signature}"
-  
+
   Structured output:
   {
     "signature": "0xabc123..."
@@ -53,7 +52,8 @@ Examples:
 
 Error Handling:
   - Returns error if wallet is not registered for the specified chain
-  - Returns error if message is empty`,
+  - Returns error if message is empty
+  - Returns "Signing cancelled" if user declines confirmation`,
       inputSchema: z.object({
         chain: z.enum(chains).describe('The blockchain to use for signing'),
         message: z.string().describe('The message to sign')
@@ -63,8 +63,8 @@ Error Handling:
       }),
       annotations: {
         readOnlyHint: false,
-        destructiveHint: false,
-        idempotentHint: true,
+        destructiveHint: true,
+        idempotentHint: false,
         openWorldHint: true
       }
     },
@@ -75,6 +75,38 @@ Error Handling:
         }
 
         const account = await server.wdk.getAccount(chain, 0)
+
+        const confirmationMessage = `⚠️  SIGNATURE CONFIRMATION REQUIRED
+
+Chain: ${chain}
+Message to sign:
+${message}
+
+This signature can authorize actions on behalf of your wallet.
+
+Do you want to sign this message?`
+
+        const result = await server.requestConfirmation(confirmationMessage, {
+          type: 'object',
+          properties: {
+            confirmed: {
+              type: 'boolean',
+              title: 'Confirm Signature',
+              description: 'Check to confirm and sign the message'
+            }
+          },
+          required: ['confirmed']
+        })
+
+        if (result.action !== 'accept' || !result.content?.confirmed) {
+          return {
+            content: [{
+              type: 'text',
+              text: 'Signing cancelled by user. No signature was created.'
+            }]
+          }
+        }
+
         const signature = await account.sign(message)
 
         return {

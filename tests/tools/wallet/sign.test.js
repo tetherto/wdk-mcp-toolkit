@@ -15,14 +15,16 @@ describe('sign', () => {
       getChains: jest.fn().mockReturnValue(['bitcoin', 'ethereum']),
       wdk: {
         getAccount: jest.fn()
-      }
+      },
+      requestConfirmation: jest.fn()
     }
   })
 
-  function setupMocks (signature = '0xsignature123abc') {
-    const signMock = jest.fn().mockResolvedValue(signature)
+  function setupMocks (overrides = {}) {
+    const signMock = jest.fn().mockResolvedValue(overrides.signature ?? '0xsignature123abc')
     const accountMock = { sign: signMock }
     server.wdk.getAccount.mockResolvedValue(accountMock)
+    server.requestConfirmation.mockResolvedValue(overrides.elicit ?? { action: 'accept', content: { confirmed: true } })
     return { signMock, accountMock }
   }
 
@@ -34,6 +36,17 @@ describe('sign', () => {
       expect.any(Object),
       expect.any(Function)
     )
+  })
+
+  test('should register tool as destructive and non-idempotent', () => {
+    sign(server)
+
+    expect(registerToolMock.mock.calls[0][1].annotations).toEqual({
+      readOnlyHint: false,
+      destructiveHint: true,
+      idempotentHint: false,
+      openWorldHint: true
+    })
   })
 
   describe('handler', () => {
@@ -77,6 +90,46 @@ describe('sign', () => {
         await handler({ chain: 'ethereum', message: 'Hello World' })
 
         expect(signMock).toHaveBeenCalledWith('Hello World')
+      })
+    })
+
+    describe('confirmation flow', () => {
+      test('should call elicitInput with confirmation message containing chain and message', async () => {
+        setupMocks()
+
+        await handler({ chain: 'ethereum', message: 'Hello World' })
+
+        expect(server.requestConfirmation).toHaveBeenCalledWith(
+          '⚠️  SIGNATURE CONFIRMATION REQUIRED\n\nChain: ethereum\nMessage to sign:\nHello World\n\nThis signature can authorize actions on behalf of your wallet.\n\nDo you want to sign this message?',
+          {
+            type: 'object',
+            properties: {
+              confirmed: {
+                type: 'boolean',
+                title: 'Confirm Signature',
+                description: 'Check to confirm and sign the message'
+              }
+            },
+            required: ['confirmed']
+          }
+        )
+      })
+
+      test('should return cancelled message if user declines', async () => {
+        setupMocks({ elicit: { action: 'reject' } })
+
+        const result = await handler({ chain: 'ethereum', message: 'Hello World' })
+
+        expect(result.content[0].text).toBe('Signing cancelled by user. No signature was created.')
+        expect(result.structuredContent).toBeUndefined()
+      })
+
+      test('should not call sign if user declines', async () => {
+        const { signMock } = setupMocks({ elicit: { action: 'reject' } })
+
+        await handler({ chain: 'ethereum', message: 'Hello World' })
+
+        expect(signMock).not.toHaveBeenCalled()
       })
     })
 
