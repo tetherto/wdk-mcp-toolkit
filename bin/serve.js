@@ -64,6 +64,7 @@ const PROTOCOL_MODULES = [
 ]
 
 const DEFAULT_CHAINS = ['ethereum', 'arbitrum', 'bitcoin']
+const SEED_ENV_KEYS = ['WDK_SEED', 'WDK_SEED_COMMAND', 'WDK_SEED_FILE']
 
 async function tryImport (pkg) {
   try {
@@ -135,6 +136,26 @@ export async function resolveSeed () {
   return null
 }
 
+/**
+ * Resolves the configured seed, gives it to WDK, then removes every seed
+ * source from the process environment.
+ *
+ * @param {WdkMcpServer} server - Server that will retain the resolved seed.
+ * @returns {Promise<string|null>} The resolved seed, or null if none is configured.
+ */
+export async function configureWdkSeed (server) {
+  const seed = await resolveSeed()
+  if (!seed) return null
+
+  server.useWdk({ seed })
+
+  // WDK now holds its own reference. Drop all inputs that can reveal or
+  // recover the seed so child processes and diagnostics cannot inherit them.
+  for (const key of SEED_ENV_KEYS) delete process.env[key]
+
+  return seed
+}
+
 function getChainDef (chain, chainModules) {
   const mod = chainModules[chain]
   if (!mod) return null
@@ -202,15 +223,9 @@ export async function serve () {
   server.usePricing()
   console.error('Pricing: enabled')
 
-  const seed = await resolveSeed()
+  const seed = await configureWdkSeed(server)
 
   if (seed) {
-    server.useWdk({ seed })
-    // WDK now holds its own reference; drop the plaintext copy from the
-    // environment so it is not inherited by child processes or exposed via
-    // /proc, env-logging diagnostics...
-    delete process.env.WDK_SEED
-
     const requestedChains = (userConfig && userConfig.enabledChains)
       ? userConfig.enabledChains.map(c => c.toLowerCase())
       : process.env.WDK_CHAINS
