@@ -125,5 +125,20 @@ describe('resolveSeed', () => {
 
       expect(server.useWdk).not.toHaveBeenCalled()
     })
+
+    test('clears every seed source when WDK configuration fails', async () => {
+      const server = {
+        useWdk: jest.fn(() => {
+          throw new Error('Invalid seed.')
+        })
+      }
+      process.env.WDK_SEED = SEED
+      process.env.WDK_SEED_COMMAND = 'echo from-command'
+      process.env.WDK_SEED_FILE = await writeSeedFile('configure-failure.txt', 'from-file')
+
+      await expect(configureWdkSeed(server)).rejects.toThrow('Invalid seed.')
+
+      for (const key of SEED_KEYS) expect(process.env[key]).toBeUndefined()
+    })
   })
 })

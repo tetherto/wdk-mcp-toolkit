@@ -142,18 +142,20 @@ export async function resolveSeed () {
  *
  * @param {WdkMcpServer} server - Server that will retain the resolved seed.
  * @returns {Promise<string|null>} The resolved seed, or null if none is configured.
+ * @throws {Error} If seed resolution or WDK configuration fails.
  */
 export async function configureWdkSeed (server) {
   const seed = await resolveSeed()
   if (!seed) return null
 
-  server.useWdk({ seed })
-
-  // WDK now holds its own reference. Drop all inputs that can reveal or
-  // recover the seed so child processes and diagnostics cannot inherit them.
-  for (const key of SEED_ENV_KEYS) delete process.env[key]
-
-  return seed
+  try {
+    server.useWdk({ seed })
+    return seed
+  } finally {
+    // WDK now holds its own reference. Drop all inputs that can reveal or
+    // recover the seed so child processes and diagnostics cannot inherit them.
+    for (const key of SEED_ENV_KEYS) delete process.env[key]
+  }
 }
 
 function getChainDef (chain, chainModules) {
