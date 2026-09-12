@@ -135,27 +135,61 @@ function printBanner () {
   console.log()
 }
 
-async function checkGitignore () {
-  const gitignorePath = path.join(process.cwd(), '.gitignore')
+async function isGitIgnored (filePath) {
   try {
-    const content = await fs.readFile(gitignorePath, 'utf-8')
-    if (!content.includes('.vscode')) {
-      console.log(pc.yellow('Note: .vscode is not in .gitignore'))
-      console.log(pc.yellow('The generated config will contain sensitive data.\n'))
+    // Ask Git about the exact path. --quiet: exit 0 if ignored, 1 if not.
+    // --no-index: works even if the path is not yet tracked.
+    await exec(`git check-ignore --quiet --no-index -- ${JSON.stringify(filePath)}`)
+    return true
+  } catch (err) {
+    // exit code 1 = not ignored; other failures (no git, not a repo) => treat as not ignored
+    if (err && (err.code === 1 || err.status === 1)) return false
+    return false
+  }
+}
 
-      const proceed = await confirm({
-        message: 'Add .vscode to .gitignore?',
-        default: true
-      })
+async function checkGitignore () {
+  const target = '.vscode/mcp.json'
+  const gitignorePath = path.join(process.cwd(), '.gitignore')
 
-      if (proceed) {
-        await fs.appendFile(gitignorePath, '\n.vscode\n')
-        console.log(pc.green('Added .vscode to .gitignore\n'))
-      }
-    }
+  if (await isGitIgnored(target)) {
+    return
+  }
+
+  console.log(pc.yellow('Note: .vscode/mcp.json is not currently gitignored'))
+  console.log(pc.yellow('The generated config will contain sensitive data (seed phrase / API keys).\n'))
+
+  let proceed = true
+  try {
+    proceed = await confirm({
+      message: 'Add a rule so .vscode/mcp.json is ignored by Git?',
+      default: true
+    })
   } catch {
-    await fs.writeFile(gitignorePath, '.vscode\n')
-    console.log(pc.green('Created .gitignore with .vscode entry\n'))
+    // non-interactive fallback: still try to protect the file
+    proceed = true
+  }
+
+  if (!proceed) {
+    console.log(pc.yellow('Skipping .gitignore update. Do not commit .vscode/mcp.json.\n'))
+    return
+  }
+
+  const rule = '\n# WDK MCP config (contains secrets)\n.vscode/mcp.json\n'
+  try {
+    await fs.access(gitignorePath)
+    await fs.appendFile(gitignorePath, rule)
+  } catch {
+    await fs.writeFile(gitignorePath, rule.trimStart())
+  }
+
+  // Re-check. If Git still does not ignore it (or Git is unavailable), warn clearly.
+  if (await isGitIgnored(target)) {
+    console.log(pc.green('Added .vscode/mcp.json to .gitignore\n'))
+  } else {
+    console.log(pc.yellow('Could not confirm that .vscode/mcp.json is gitignored.'))
+    console.log(pc.yellow('Git may be missing or this is not a Git repository.'))
+    console.log(pc.yellow('The file will still be written, but do not commit it.\n'))
   }
 }
 
