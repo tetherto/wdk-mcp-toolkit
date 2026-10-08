@@ -76,6 +76,12 @@ const DEPENDENCIES = [
   }
 ]
 
+/** Path this wizard writes the seed phrase and API keys into. */
+const CONFIG_RELATIVE_PATH = '.vscode/mcp.json'
+
+/** The .gitignore rule that covers CONFIG_RELATIVE_PATH. */
+const GITIGNORE_ENTRY = '.vscode'
+
 async function checkVsCodeInstalled () {
   try {
     await exec('code --version')
@@ -102,11 +108,16 @@ async function runSetupWizard () {
     process.exit(1)
   }
 
-  await checkGitignore()
+  const gitignore = await checkGitignore()
+  if (gitignore === 'refused') {
+    console.log(pc.red(`Refusing to write your seed phrase into ${CONFIG_RELATIVE_PATH} while Git may track it.`))
+    console.log(pc.dim(`Add ${GITIGNORE_ENTRY} to .gitignore, then run setup again.\n`))
+    process.exit(1)
+  }
 
   const config = {}
 
-  config.seed = await collectSeedPhrase()
+  config.seed = await collectSeedPhrase(gitignore === 'ignored')
 
   config.indexerApiKey = await collectIndexerApiKey()
 
@@ -135,37 +146,87 @@ function printBanner () {
   console.log()
 }
 
-async function checkGitignore () {
-  const gitignorePath = path.join(process.cwd(), '.gitignore')
+/**
+ * Ask Git whether a path is ignored instead of pattern matching .gitignore
+ * ourselves. A rule such as `.vscode/settings.json`, or a comment that merely
+ * mentions `.vscode`, satisfies a substring check while leaving
+ * `.vscode/mcp.json` visible to `git status`.
+ *
+ * @param {string} relativePath
+ * @returns {Promise<'ignored'|'not-ignored'|'unverifiable'>}
+ */
+async function gitIgnoreState (relativePath) {
   try {
-    const content = await fs.readFile(gitignorePath, 'utf-8')
-    if (!content.includes('.vscode')) {
-      console.log(pc.yellow('Note: .vscode is not in .gitignore'))
-      console.log(pc.yellow('The generated config will contain sensitive data.\n'))
-
-      const proceed = await confirm({
-        message: 'Add .vscode to .gitignore?',
-        default: true
-      })
-
-      if (proceed) {
-        await fs.appendFile(gitignorePath, '\n.vscode\n')
-        console.log(pc.green('Added .vscode to .gitignore\n'))
-      }
-    }
-  } catch {
-    await fs.writeFile(gitignorePath, '.vscode\n')
-    console.log(pc.green('Created .gitignore with .vscode entry\n'))
+    await exec(`git check-ignore --quiet --no-index -- ${relativePath}`, { cwd: process.cwd() })
+    return 'ignored'
+  } catch (error) {
+    // Git exits 1 when the path is not ignored. Anything else (127 for a
+    // missing git, 128 for "not a repository") means the answer is unknown.
+    return error.code === 1 ? 'not-ignored' : 'unverifiable'
   }
 }
 
-async function collectSeedPhrase () {
+/**
+ * Confirm that the file this wizard is about to write the seed phrase into is
+ * actually ignored by Git, or stop before anything is written.
+ *
+ * @returns {Promise<'ignored'|'unverified'|'refused'>}
+ */
+async function checkGitignore () {
+  let state = await gitIgnoreState(CONFIG_RELATIVE_PATH)
+
+  if (state === 'unverifiable') {
+    console.log(pc.yellow(`Cannot confirm that ${CONFIG_RELATIVE_PATH} is gitignored.`))
+    console.log(pc.yellow('Git is unavailable, or this is not a Git repository.\n'))
+
+    const proceed = await confirm({
+      message: 'The config will hold your seed phrase in plain text. Continue anyway?',
+      default: false
+    })
+
+    return proceed ? 'unverified' : 'refused'
+  }
+
+  if (state === 'ignored') {
+    return 'ignored'
+  }
+
+  console.log(pc.yellow(`Note: ${CONFIG_RELATIVE_PATH} is not in .gitignore`))
+  console.log(pc.yellow('The generated config will contain sensitive data.\n'))
+
+  const proceed = await confirm({
+    message: `Add ${GITIGNORE_ENTRY} to .gitignore?`,
+    default: true
+  })
+
+  if (!proceed) {
+    return 'refused'
+  }
+
+  try {
+    await fs.appendFile(path.join(process.cwd(), '.gitignore'), `\n${GITIGNORE_ENTRY}\n`)
+  } catch {
+    console.log(pc.red('\nCould not update .gitignore.'))
+    return 'refused'
+  }
+
+  state = await gitIgnoreState(CONFIG_RELATIVE_PATH)
+  if (state !== 'ignored') {
+    console.log(pc.red(`\n${CONFIG_RELATIVE_PATH} is still not ignored by Git.`))
+    return 'refused'
+  }
+
+  console.log(pc.green(`Added ${GITIGNORE_ENTRY} to .gitignore\n`))
+  return 'ignored'
+}
+
+async function collectSeedPhrase (gitIgnored) {
   console.log(pc.yellow(pc.bold('SEED PHRASE (Required)')))
   console.log(pc.dim('──────────────────────────────────────────────────────────'))
   console.log()
   console.log(pc.yellow('SECURITY NOTICE:'))
   console.log(pc.yellow('   - Your seed phrase controls your wallet funds'))
-  console.log(pc.yellow('   - It will be stored locally in .vscode/mcp.json (gitignored)'))
+  console.log(pc.yellow(`   - It will be stored locally in ${CONFIG_RELATIVE_PATH}${gitIgnored ? ' (gitignored)' : ', gitignore status unconfirmed'}`))
   console.log(pc.yellow('   - We recommend using a dedicated development wallet'))
   console.log(pc.yellow('   - Never use your main wallet seed phrase'))
   console.log()
@@ -478,4 +539,4 @@ function printSuccessMessage (config) {
   console.log()
 }
 
-export { runSetupWizard }
+export { runSetupWizard, checkGitignore, gitIgnoreState }
