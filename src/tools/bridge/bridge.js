@@ -14,7 +14,7 @@
 'use strict'
 
 import { z } from 'zod'
-import { parseAmountToBaseUnits } from '../../utils/index.js'
+import { parseAmountToBaseUnits, formatBaseUnitsToAmount } from '../../utils/index.js'
 
 /** @typedef {import('../../server.js').WdkMcpServer} WdkMcpServer */
 
@@ -145,7 +145,7 @@ Protocol: ${label}
 From: ${chain}
 To: ${targetChain}
 Token: ${token}
-Amount: ${amount}
+Amount: ${formatBaseUnitsToAmount(baseAmount, tokenInfo.decimals)}
 Recipient: ${recipientAddress}
 Gas Fee: ${quote.fee.toString()}
 Bridge Fee: ${quote.bridgeFee.toString()}

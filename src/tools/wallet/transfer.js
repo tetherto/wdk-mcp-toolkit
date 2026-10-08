@@ -14,7 +14,7 @@
 'use strict'
 
 import { z } from 'zod'
-import { parseAmountToBaseUnits } from '../../utils/index.js'
+import { parseAmountToBaseUnits, formatBaseUnitsToAmount } from '../../utils/index.js'
 
 /** @typedef {import('../../server.js').WdkMcpServer} WdkMcpServer */
 
@@ -113,7 +113,7 @@ Error Handling:
 
 Token: ${tokenSymbol}
 To: ${to}
-Amount: ${amount} ${tokenSymbol} (${baseUnitAmount.toString()} base units)
+Amount: ${formatBaseUnitsToAmount(baseUnitAmount, decimals)} ${tokenSymbol} (${baseUnitAmount.toString()} base units)
 Estimated Fee: ${quote.fee.toString()}
 
 This transfer is IRREVERSIBLE once broadcast to the ${chain} network.
