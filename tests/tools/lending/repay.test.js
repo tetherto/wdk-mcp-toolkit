@@ -231,6 +231,50 @@ describe('repay', () => {
         )
       })
 
+      test('should confirm the parsed amount rather than the raw argument', async () => {
+        const quoteRepayMock = jest.fn().mockResolvedValue({ fee: 21000000000000n })
+        const repayMock = jest.fn().mockResolvedValue({ hash: '0xabc123', fee: 21000000000000n })
+
+        const accountMock = {
+          getAddress: jest.fn().mockResolvedValue('0x123'),
+          getLendingProtocol: jest.fn().mockReturnValue({
+            quoteRepay: quoteRepayMock,
+            repay: repayMock
+          })
+        }
+
+        server.getTokenInfo.mockReturnValue(USDT_INFO)
+        server.wdk.getAccount.mockResolvedValue(accountMock)
+        server.requestConfirmation.mockResolvedValue({ action: 'accept', content: { confirmed: true } })
+
+        const result = await handler({
+          chain: 'ethereum',
+          token: 'USDT',
+          amount: '1,000.50'
+        })
+
+        expect(server.requestConfirmation).toHaveBeenCalledWith(
+          `⚠️  REPAY CONFIRMATION REQUIRED\n\nProtocol: aave\nChain: ethereum\nToken: USDT\nAmount: 1000.5\nRepaying for: 0x123\nEstimated Fee: 21000000000000\n\nThis will reduce your debt and improve your health factor. This transaction is IRREVERSIBLE once broadcast.\n\nDo you want to proceed with this repayment?`,
+          {
+            type: 'object',
+            properties: {
+              confirmed: {
+                type: 'boolean',
+                title: 'Confirm Repay',
+                description: 'Check to confirm and execute repayment'
+              }
+            },
+            required: ['confirmed']
+          }
+        )
+        expect(repayMock).toHaveBeenCalledWith({
+          token: USDT_INFO.address,
+          amount: 1000500000n,
+          onBehalfOf: '0x123'
+        })
+        expect(result.structuredContent.amount).toBe('1000.5')
+      })
+
       test('should return cancelled message if user declines', async () => {
         const quoteRepayMock = jest.fn().mockResolvedValue({ fee: 21000000000000n })
 

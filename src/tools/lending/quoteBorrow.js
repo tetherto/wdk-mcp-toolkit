@@ -14,7 +14,7 @@
 'use strict'
 
 import { z } from 'zod'
-import { parseAmountToBaseUnits } from '../../utils/index.js'
+import { parseAmount } from '../../utils/index.js'
 
 /** @typedef {import('../../server.js').WdkMcpServer} WdkMcpServer */
 
@@ -64,7 +64,7 @@ Error Handling:
       inputSchema: z.object({
         chain: z.enum(lendingChains).describe('The blockchain where the lending pool is'),
         token: z.string().describe('The token symbol to borrow (e.g., "USDT")'),
-        amount: z.string().describe('The amount in human-readable units (e.g., "100")'),
+        amount: z.string().describe('The amount in human-readable units (e.g., "100"). Use "." as the decimal separator; "," is accepted only as a thousand separator (e.g., "1,000.50").'),
         onBehalfOf: z.string().optional().describe('Address to receive debt (defaults to wallet address)')
       }),
       outputSchema: z.object({
@@ -104,11 +104,11 @@ Error Handling:
         const account = await server.wdk.getAccount(chain, 0)
         const lendingProtocol = account.getLendingProtocol(label)
 
-        const baseAmount = parseAmountToBaseUnits(amount, tokenInfo.decimals)
+        const { baseUnits, display } = parseAmount(amount, tokenInfo.decimals)
 
         const options = {
           token: tokenInfo.address,
-          amount: baseAmount,
+          amount: baseUnits,
           onBehalfOf: onBehalfOf || await account.getAddress()
         }
 
@@ -118,7 +118,7 @@ Error Handling:
           protocol: label,
           chain,
           token,
-          amount,
+          amount: display,
           fee: quote.fee.toString()
         }
 

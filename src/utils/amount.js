@@ -24,7 +24,8 @@ export const AMOUNT_ERROR_CODES = {
   NEGATIVE_AMOUNT: 'NEGATIVE_AMOUNT',
   EXCESSIVE_PRECISION: 'EXCESSIVE_PRECISION',
   INVALID_DECIMALS: 'INVALID_DECIMALS',
-  SCIENTIFIC_NOTATION_PRECISION: 'SCIENTIFIC_NOTATION_PRECISION'
+  SCIENTIFIC_NOTATION_PRECISION: 'SCIENTIFIC_NOTATION_PRECISION',
+  AMBIGUOUS_SEPARATOR: 'AMBIGUOUS_SEPARATOR'
 }
 
 /**
@@ -43,6 +44,14 @@ export class AmountParseError extends Error {
     this.code = code
   }
 }
+
+/**
+ * Matches an amount whose commas are all valid thousand separators, such as
+ * "1,000" or "1,000,000.50".
+ *
+ * @type {RegExp}
+ */
+const THOUSAND_SEPARATED_PATTERN = /^\d{1,3}(,\d{3})*(\.\d+)?$/
 
 /**
  * Expands scientific notation to decimal format.
@@ -102,7 +111,14 @@ function expandScientificNotation (value, maxDecimals) {
  * @param {string} amount - The amount to parse (e.g., "2.01", "1,000.50", "100")
  * @param {number} decimals - The number of decimal places for the token (e.g., 6 for USDT, 18 for ETH)
  * @returns {bigint} The amount in base units (wei, satoshis, etc.)
- * @throws {AmountParseError} If the input is invalid
+ * @throws {AmountParseError} If `decimals` is not an integer between 0 and 77 (`INVALID_DECIMALS`).
+ * @throws {AmountParseError} If `amount` is not a string (`INVALID_FORMAT`).
+ * @throws {AmountParseError} If `amount` is empty or contains only whitespace (`EMPTY_STRING`).
+ * @throws {AmountParseError} If `amount` is negative (`NEGATIVE_AMOUNT`).
+ * @throws {AmountParseError} If `amount` uses a comma as anything other than a thousand separator, such as "0,5" (`AMBIGUOUS_SEPARATOR`).
+ * @throws {AmountParseError} If `amount` is not a positive decimal number (`INVALID_FORMAT`).
+ * @throws {AmountParseError} If `amount` is in scientific notation and expands past `decimals` places (`SCIENTIFIC_NOTATION_PRECISION`).
+ * @throws {AmountParseError} If `amount` has more decimal places than `decimals` (`EXCESSIVE_PRECISION`).
  *
  * @example
  * parseAmountToBaseUnits("2.01", 6)  // Returns 2010000n
@@ -140,7 +156,17 @@ export function parseAmountToBaseUnits (amount, decimals) {
     )
   }
 
-  trimmed = trimmed.replace(/,/g, '')
+  if (trimmed.includes(',')) {
+    if (!THOUSAND_SEPARATED_PATTERN.test(trimmed)) {
+      throw new AmountParseError(
+        `Ambiguous amount format: "${amount}". Commas are only accepted as thousand separators ` +
+        'in groups of three (e.g., "1,000.50"). Use "." as the decimal separator.',
+        AMOUNT_ERROR_CODES.AMBIGUOUS_SEPARATOR
+      )
+    }
+
+    trimmed = trimmed.replace(/,/g, '')
+  }
 
   if (/[eE]/.test(trimmed)) {
     trimmed = expandScientificNotation(trimmed, decimals)
@@ -173,6 +199,41 @@ export function parseAmountToBaseUnits (amount, decimals) {
     : normalizedInteger + paddedFractional
 
   return BigInt(combinedString)
+}
+
+/**
+ * A user-supplied amount in both the form that is sent and the form that is shown.
+ *
+ * @typedef {Object} ParsedAmount
+ * @property {bigint} baseUnits - The amount in base units, to be sent on-chain.
+ * @property {string} display - The same amount rendered back as a decimal string, to be shown to the user.
+ */
+
+/**
+ * Parses a human-readable amount into the value to send and the value to display.
+ *
+ * Both fields derive from the same parse, so a confirmation prompt built from
+ * `display` always describes the `baseUnits` that are submitted.
+ *
+ * @param {string} amount - The amount to parse (e.g., "2.01", "1,000.50", "100")
+ * @param {number} decimals - The number of decimal places for the token (e.g., 6 for USDT, 18 for ETH)
+ * @returns {ParsedAmount} The amount in base units together with its display form.
+ * @throws {AmountParseError} If `decimals` is not an integer between 0 and 77 (`INVALID_DECIMALS`).
+ * @throws {AmountParseError} If `amount` is not a string (`INVALID_FORMAT`).
+ * @throws {AmountParseError} If `amount` is empty or contains only whitespace (`EMPTY_STRING`).
+ * @throws {AmountParseError} If `amount` is negative (`NEGATIVE_AMOUNT`).
+ * @throws {AmountParseError} If `amount` uses a comma as anything other than a thousand separator, such as "0,5" (`AMBIGUOUS_SEPARATOR`).
+ * @throws {AmountParseError} If `amount` is not a positive decimal number (`INVALID_FORMAT`).
+ * @throws {AmountParseError} If `amount` is in scientific notation and expands past `decimals` places (`SCIENTIFIC_NOTATION_PRECISION`).
+ * @throws {AmountParseError} If `amount` has more decimal places than `decimals` (`EXCESSIVE_PRECISION`).
+ *
+ * @example
+ * parseAmount("1,000.50", 6)  // Returns { baseUnits: 1000500000n, display: "1000.5" }
+ */
+export function parseAmount (amount, decimals) {
+  const baseUnits = parseAmountToBaseUnits(amount, decimals)
+
+  return { baseUnits, display: formatBaseUnitsToAmount(baseUnits, decimals) }
 }
 
 /**

@@ -14,7 +14,7 @@
 'use strict'
 
 import { z } from 'zod'
-import { parseAmountToBaseUnits } from '../../utils/index.js'
+import { parseAmount } from '../../utils/index.js'
 
 /** @typedef {import('../../server.js').WdkMcpServer} WdkMcpServer */
 
@@ -80,7 +80,7 @@ Error Handling:
         chain: z.enum(chains).describe('The blockchain to quote on'),
         token: z.string().describe('Token symbol (e.g., "USDT", "USDC", "DAI")'),
         recipient: z.string().describe('The recipient address'),
-        amount: z.string().describe('The amount to transfer in human-readable format (e.g., "10" or "0.5")')
+        amount: z.string().describe('The amount to transfer in human-readable format (e.g., "10" or "0.5"). Use "." as the decimal separator; "," is accepted only as a thousand separator (e.g., "1,000.50").')
       }),
       outputSchema: z.object({
         fee: z.string().describe('Estimated transaction fee in base units')
@@ -107,9 +107,9 @@ Error Handling:
 
         const { address: tokenAddress, decimals } = tokenInfo
 
-        const baseUnitAmount = parseAmountToBaseUnits(amount, decimals)
+        const { baseUnits, display } = parseAmount(amount, decimals)
 
-        if (baseUnitAmount === 0n) {
+        if (baseUnits === 0n) {
           throw new Error('Amount must be greater than zero')
         }
 
@@ -117,7 +117,7 @@ Error Handling:
         const result = await account.quoteTransfer({
           token: tokenAddress,
           recipient,
-          amount: baseUnitAmount
+          amount: baseUnits
         })
 
         const feeStr = result.fee.toString()
@@ -125,7 +125,7 @@ Error Handling:
         return {
           content: [{
             type: 'text',
-            text: `Estimated fee for transferring ${amount} ${tokenSymbol}: ${feeStr}`
+            text: `Estimated fee for transferring ${display} ${tokenSymbol}: ${feeStr}`
           }],
           structuredContent: {
             fee: feeStr

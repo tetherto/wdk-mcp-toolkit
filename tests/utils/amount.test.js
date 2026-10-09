@@ -53,6 +53,26 @@ describe('parseAmountToBaseUnits', () => {
     ])('strips commas from "%s"', (input, decimals, expected) => {
       expect(parseAmountToBaseUnits(input, decimals)).toBe(expected)
     })
+
+    test.each([
+      ['0,5'],
+      ['0,100000'],
+      ['1000,000'],
+      ['12,34,567']
+    ])('rejects "%s" instead of stripping the comma', (input) => {
+      let error
+
+      try {
+        parseAmountToBaseUnits(input, 6)
+      } catch (e) {
+        error = e
+      }
+
+      expect(error).toBeInstanceOf(AmountParseError)
+      expect(error.code).toBe(AMOUNT_ERROR_CODES.AMBIGUOUS_SEPARATOR)
+      expect(error.message).toBe(`Ambiguous amount format: "${input}". Commas are only accepted as thousand separators ` +
+        'in groups of three (e.g., "1,000.50"). Use "." as the decimal separator.')
+    })
   })
 
   describe('scientific notation', () => {
@@ -63,6 +83,22 @@ describe('parseAmountToBaseUnits', () => {
       ['2.5e-2', 6, 25000n]
     ])('expands "%s" correctly', (input, decimals, expected) => {
       expect(parseAmountToBaseUnits(input, decimals)).toBe(expected)
+    })
+
+    test.each([
+      ['1,000e3'],
+      ['1,000.5e2']
+    ])('rejects "%s" because a comma cannot be combined with an exponent', (input) => {
+      let error
+
+      try {
+        parseAmountToBaseUnits(input, 6)
+      } catch (e) {
+        error = e
+      }
+
+      expect(error).toBeInstanceOf(AmountParseError)
+      expect(error.code).toBe(AMOUNT_ERROR_CODES.AMBIGUOUS_SEPARATOR)
     })
 
     test('throws on precision overflow', () => {

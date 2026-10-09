@@ -14,7 +14,7 @@
 'use strict'
 
 import { z } from 'zod'
-import { parseAmountToBaseUnits } from '../../utils/index.js'
+import { parseAmount } from '../../utils/index.js'
 
 /** @typedef {import('../../server.js').WdkMcpServer} WdkMcpServer */
 
@@ -81,7 +81,7 @@ Error Handling:
         chain: z.enum(bridgeChains).describe('The source blockchain to bridge from'),
         targetChain: z.string().describe('The destination blockchain to bridge to'),
         token: z.string().describe('The token symbol to bridge (e.g., "USDT")'),
-        amount: z.string().describe('The amount in human-readable units (e.g., "100")'),
+        amount: z.string().describe('The amount in human-readable units (e.g., "100"). Use "." as the decimal separator; "," is accepted only as a thousand separator (e.g., "1,000.50").'),
         recipient: z.string().optional().describe('Recipient address on target chain (defaults to wallet address)')
       }),
       outputSchema: z.object({
@@ -125,13 +125,13 @@ Error Handling:
         const account = await server.wdk.getAccount(chain, 0)
         const bridgeProtocol = account.getBridgeProtocol(label)
 
-        const baseAmount = parseAmountToBaseUnits(amount, tokenInfo.decimals)
+        const { baseUnits, display } = parseAmount(amount, tokenInfo.decimals)
         const recipientAddress = recipient || await account.getAddress()
 
         const options = {
           targetChain,
           token: tokenInfo.address,
-          amount: baseAmount,
+          amount: baseUnits,
           recipient: recipientAddress
         }
 
@@ -145,7 +145,7 @@ Protocol: ${label}
 From: ${chain}
 To: ${targetChain}
 Token: ${token}
-Amount: ${amount}
+Amount: ${display}
 Recipient: ${recipientAddress}
 Gas Fee: ${quote.fee.toString()}
 Bridge Fee: ${quote.bridgeFee.toString()}
@@ -182,7 +182,7 @@ Do you want to proceed with this bridge?`
           sourceChain: chain,
           targetChain,
           token,
-          amount,
+          amount: display,
           fee: bridgeResult.fee.toString(),
           bridgeFee: bridgeResult.bridgeFee.toString()
         }
