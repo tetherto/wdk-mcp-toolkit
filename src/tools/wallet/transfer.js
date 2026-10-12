@@ -14,7 +14,7 @@
 'use strict'
 
 import { z } from 'zod'
-import { parseAmountToBaseUnits } from '../../utils/index.js'
+import { parseAmount } from '../../utils/index.js'
 
 /** @typedef {import('../../server.js').WdkMcpServer} WdkMcpServer */
 
@@ -67,7 +67,7 @@ Error Handling:
         chain: z.enum(chains).describe('The blockchain to transfer on'),
         token: z.string().describe('Token symbol (e.g., "USDT", "USDC", "DAI")'),
         to: z.string().describe('The recipient address'),
-        amount: z.string().describe('The amount to transfer in human-readable format (e.g., "10" or "0.5")')
+        amount: z.string().describe('The amount to transfer in human-readable format (e.g., "10" or "0.5"). Use "." as the decimal separator; "," is accepted only as a thousand separator (e.g., "1,000.50").')
       }),
       outputSchema: z.object({
         hash: z.string().describe('Transaction hash'),
@@ -95,9 +95,9 @@ Error Handling:
 
         const { address: tokenAddress, decimals } = tokenInfo
 
-        const baseUnitAmount = parseAmountToBaseUnits(amount, decimals)
+        const { baseUnits, display } = parseAmount(amount, decimals)
 
-        if (baseUnitAmount === 0n) {
+        if (baseUnits === 0n) {
           throw new Error('Amount must be greater than zero')
         }
 
@@ -106,14 +106,14 @@ Error Handling:
         const quote = await account.quoteTransfer({
           token: tokenAddress,
           recipient: to,
-          amount: baseUnitAmount
+          amount: baseUnits
         })
 
         const confirmationMessage = `⚠️  TOKEN TRANSFER CONFIRMATION REQUIRED
 
 Token: ${tokenSymbol}
 To: ${to}
-Amount: ${amount} ${tokenSymbol} (${baseUnitAmount.toString()} base units)
+Amount: ${display} ${tokenSymbol} (${baseUnits.toString()} base units)
 Estimated Fee: ${quote.fee.toString()}
 
 This transfer is IRREVERSIBLE once broadcast to the ${chain} network.
@@ -144,7 +144,7 @@ Do you want to proceed with this transfer?`
         const txResult = await account.transfer({
           token: tokenAddress,
           recipient: to,
-          amount: baseUnitAmount
+          amount: baseUnits
         })
 
         return {

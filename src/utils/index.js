@@ -14,6 +14,7 @@
 'use strict'
 
 export {
+  parseAmount,
   parseAmountToBaseUnits,
   formatBaseUnitsToAmount,
   AmountParseError,

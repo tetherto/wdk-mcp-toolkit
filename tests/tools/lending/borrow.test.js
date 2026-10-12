@@ -231,6 +231,50 @@ describe('borrow', () => {
         )
       })
 
+      test('should confirm the parsed amount rather than the raw argument', async () => {
+        const quoteBorrowMock = jest.fn().mockResolvedValue({ fee: 21000000000000n })
+        const borrowMock = jest.fn().mockResolvedValue({ hash: '0xabc123', fee: 21000000000000n })
+
+        const accountMock = {
+          getAddress: jest.fn().mockResolvedValue('0x123'),
+          getLendingProtocol: jest.fn().mockReturnValue({
+            quoteBorrow: quoteBorrowMock,
+            borrow: borrowMock
+          })
+        }
+
+        server.getTokenInfo.mockReturnValue(USDT_INFO)
+        server.wdk.getAccount.mockResolvedValue(accountMock)
+        server.requestConfirmation.mockResolvedValue({ action: 'accept', content: { confirmed: true } })
+
+        const result = await handler({
+          chain: 'ethereum',
+          token: 'USDT',
+          amount: '1,000.50'
+        })
+
+        expect(server.requestConfirmation).toHaveBeenCalledWith(
+          `⚠️  BORROW CONFIRMATION REQUIRED\n\nProtocol: aave\nChain: ethereum\nToken: USDT\nAmount: 1000.5\nBorrower: 0x123\nEstimated Fee: 21000000000000\n\n⚠️ WARNING: This creates DEBT that accrues interest. Monitor your health factor to avoid liquidation.\n\nThis transaction is IRREVERSIBLE once broadcast.\n\nDo you want to proceed with this borrow?`,
+          {
+            type: 'object',
+            properties: {
+              confirmed: {
+                type: 'boolean',
+                title: 'Confirm Borrow',
+                description: 'Check to confirm and execute borrow'
+              }
+            },
+            required: ['confirmed']
+          }
+        )
+        expect(borrowMock).toHaveBeenCalledWith({
+          token: USDT_INFO.address,
+          amount: 1000500000n,
+          onBehalfOf: '0x123'
+        })
+        expect(result.structuredContent.amount).toBe('1000.5')
+      })
+
       test('should return cancelled message if user declines', async () => {
         const quoteBorrowMock = jest.fn().mockResolvedValue({ fee: 21000000000000n })
 

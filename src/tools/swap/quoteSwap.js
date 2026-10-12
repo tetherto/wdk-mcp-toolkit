@@ -70,7 +70,7 @@ Error Handling:
         chain: z.enum(swapChains).describe('The blockchain to perform the swap on'),
         tokenIn: z.string().describe('The token symbol to sell (e.g., "USDT")'),
         tokenOut: z.string().describe('The token symbol to buy (e.g., "USDC")'),
-        amount: z.string().describe('The amount in human-readable units (e.g., "100")'),
+        amount: z.string().describe('The amount in human-readable units (e.g., "100"). Use "." as the decimal separator; "," is accepted only as a thousand separator (e.g., "1,000.50").'),
         side: z.enum(['sell', 'buy']).describe('Whether amount is input (sell) or output (buy)')
       }),
       outputSchema: z.object({
