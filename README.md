@@ -1,7 +1,7 @@
 # @tetherto/wdk-mcp-toolkit (deprecated)
 
 > [!WARNING]
-> **This project is deprecated and no longer maintained.** To give an AI agent access to a WDK wallet, use the MCP server bundled with [WDK CLI](https://docs.wdk.tether.io/cli/). See [Use the MCP Server](https://docs.wdk.tether.io/cli/guides/use-mcp-server/).
+> **This project is deprecated and no longer maintained. This repository will be archived soon.** To give an AI agent access to a WDK wallet, use the MCP server bundled with [WDK CLI](https://docs.wdk.tether.io/cli/). See [Use the MCP Server](https://docs.wdk.tether.io/cli/guides/use-mcp-server/).
 
 The MCP Toolkit was a library for building your own MCP server with WDK tools. It was never published as a working npm release: `@tetherto/wdk-mcp-toolkit@0.0.0` is an empty package and is deprecated. This repository stays available as a read-only source reference.
 
